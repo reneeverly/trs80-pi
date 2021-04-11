@@ -14,12 +14,14 @@
  *      in rterm.h.
  *
  *      TODO:
- *      [ ] Fetch list of files in folder
+ *      [x] Fetch list of files only in folder
+ *      [ ] Figure out how to handle folders / navigate them
  *      [ ] Display list of files as table
  *          [ ] Filler entries where blank
  *      [ ] Allow navigation of table
- *          [ ] Right/left keys (with wrap)
+ *          [ ] Right/left keys (with wrap, even to front)
  *          [ ] Up/down keys (no wrap)
+ *          [ ] Scroll window to show more than visible
  *      [ ] fork/exec programs selected
  *      [ ] read keys into buffer for the "Select:" line
  *          [ ] Tab completion for existing files or programs
@@ -31,12 +33,13 @@
 #include <stdexcept>
 #include <stdio.h>
 #include <string>
-
-// Disk Usage
-#include <sys/statvfs.h>
+#include <vector>
 
 // Time
 #include <chrono>
+
+// Filesystem
+#include <filesystem>
 
 // Terminal manipulation
 #include "../../include/rterm.h"
@@ -61,6 +64,21 @@ int main() {
    
    // Render the corner labels
    drawInterface();
+
+   // Get list of files in directory
+   vector<string> files;
+   rt.moveCursor(1, 0);
+   for (const auto & entry : filesystem::directory_iterator(".")) {
+      // omit directories for now
+      if (!filesystem::is_directory(entry)) {
+         files.push_back(entry.path().filename());
+      }
+   }
+
+   // Display list of files
+   for (int i = 0; i < files.size(); i++) {
+      cout << files[i] << endl;
+   }
    
    // move the cursor to the prompt line
    rt.moveCursor(rt.lines - 1, 8);
@@ -115,23 +133,8 @@ void drawInterface() {
 
    // Write disk usage (bottom right)
    rt.moveCursor(rt.lines - 1, rt.cols - 30);
-   struct statvfs fiData;
-   if (statvfs("/", &fiData) < 0) {
-      cout << "Failed to get Disk Data.";
-   } else {
-      /*
-       * Will overflow if trying to multiply too high.
-       * Let's use KBytes instead of Bytes to reduce that chance.
-       *
-       * f_bavail is the total number of available blocks
-       * f_frsize is the size in bytes of the minimum unit of allocation
-       *      Note that statvfs is different from statfs.
-       *      This is equivalent to statfs's f_bsize.
-       *      statvfs has a differnt  member f_bsize which is the I/O request length.
-       */
-      unsigned long kbytesfree = fiData.f_bavail * (fiData.f_frsize / 1024);
-      cout << setw(15) << kbytesfree << " Kilobytes free";
-   }
+   filesystem::space_info root = filesystem::space("/");
+   cout << setw(19) << root.available << " Bytes free";
 }
 
 /**
