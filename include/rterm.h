@@ -35,6 +35,8 @@ class rterm {
       string sMoveCursor;
       string sReverse;
       string sResetAttributes;
+      string sSaveCursor;
+      string sRestoreCursor;
       
       string exec(const char*);
       string ToHex(const string&, const bool); /* for debugging */
@@ -50,9 +52,13 @@ class rterm {
       void moveCursor(const int, const int);
       void reverse();
       void resetAttributes();
+      void saveCursor();
+      void restoreCursor();
       
       string getReverse();
       string getResetAttributes();
+      string getSaveCursor();
+      string getRestoreCursor();
 };
 
 /**
@@ -71,6 +77,12 @@ rterm::rterm() {
    
    // Get the control sequence for reset attributes
    sResetAttributes = exec("tput sgr0");
+
+   // Get the control sequence for save cursor
+   sSaveCursor = exec("tput sc");
+
+   // Get the control sequence for restore cursor
+   sRestoreCursor = exec("tput rc");
    
    // Get the dimensions of the terminal
    updateDimensions();
@@ -172,9 +184,9 @@ void rterm::clear() {
 
 /**
  * @method reverse
- * Sets the "reverse" attribute, meaning that future text will be written with inverted colors.
+ * Sets the "reverse" attribute, meaning that future text will be
+ * written with inverted colors. This is not a "toggle" function.
  * (If bright text on dark background, will be dark text on bright background.)
- * This is not a "toggle" function.
  * @see resetAttributes for undoing this command.
  */
 void rterm::reverse() {
@@ -183,17 +195,34 @@ void rterm::reverse() {
 
 /**
  * @method resetAttributes
- * Resets all attributes; future text will be written with terminal default attributes.
+ * Resets all attributes; future text will be written
+ * with terminal default attributes.
  */
 void rterm::resetAttributes() {
    cout << sResetAttributes;
 }
 
 /**
+ * @method saveCursor
+ * Saves the position of the cursor (nonstackable).
+ */
+void rterm::saveCursor() {
+   cout << sSaveCursor;
+}
+
+/**
+ * @method restoreCursor
+ * Restores the position of the cursor (nonstackable).
+ */
+void rterm::restoreCursor() {
+   cout << sRestoreCursor;
+}
+
+/**
  * @method getReverse
  * @see reverse
- * Instead of executing the reverse control sequence, this method gives it to you
- * in string form.  Useful for cout inlining of output manipulation.
+ * Instead of executing the reverse control sequence, this method gives it to
+ * you in string form.  Useful for cout inlining of output manipulation.
  * @returns {string} the control sequence for reversing colors.
  */
 string rterm::getReverse() {
@@ -203,8 +232,8 @@ string rterm::getReverse() {
 /**
  * @method getResetAttributes
  * @see resetAttributes
- * Instead of executing the reset attributes control sequence, this method gives it to you
- * in string form.  Useful for cout inlining of output manipulation.
+ * Instead of executing the reset attributes control sequence, this method gives
+ * it to you in string form.  Useful for cout inlining of output manipulation.
  * @returns {string} the control sequence for reseting attributes.
  */
 string rterm::getResetAttributes() {
@@ -212,9 +241,32 @@ string rterm::getResetAttributes() {
 }
 
 /**
+ * @method getSaveCursor
+ * @see saveCursor
+ * Instead of executing the save cursor control sequence, this method gives it
+ * to you in string form.  Useful for cout inlining of output manipulation.
+ * @returns {string} the control sequence for saving the cursor.
+ */
+string rterm::getSaveCursor() {
+   return sSaveCursor;
+}
+
+/**
+ * @method getRestoreCursor
+ * @see restoreCursor
+ * Instead of executing the restore cursor control sequence, this method gives
+ * it to you in string form.  Useful for cout inlining of output manipulation.
+ * @returns {string} the control sequence for restoring the cursor.
+ */
+string rterm::getRestoreCursor() {
+   return sRestoreCursor;
+}
+
+/**
  * @private
  * @method ToHex
- * Used for debugging; returns a string (or control sequence in our context) as hex digits.
+ * Used for debugging; returns a string (or control sequence in our context)
+ * as hex digits.
  * @returns {string} the hex representation of the string.
  */
 string rterm::ToHex(const string& s, const bool upper_case = true) {
