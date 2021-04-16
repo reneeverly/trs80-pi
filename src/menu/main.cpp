@@ -91,7 +91,7 @@ int main() {
    }
 
    // Display list of files
-   for (int i = 0; i < files.size(); i++) {
+   for (size_t i = 0; i < files.size(); i++) {
       cout << files[i] << endl;
    }
    

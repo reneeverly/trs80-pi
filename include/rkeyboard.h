@@ -107,7 +107,7 @@ int resolveEscapeSequence() {
       // Get another character
       sequence += getch();
       
-      for (int i = 0; i < (sizeof(candidates)/sizeof(candidates[0])); i++) {
+      for (size_t i = 0; i < (sizeof(candidates)/sizeof(candidates[0])); i++) {
          if (candidates[i].find(sequence) != string::npos) {
             matches++;
             if (candidates[i].length() == sequence.length()) {
