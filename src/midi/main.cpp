@@ -30,6 +30,7 @@
 
 #include <signal.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 // Terminal manipulation
 #include "../../include/rterm.h"
