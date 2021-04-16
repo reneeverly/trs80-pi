@@ -29,6 +29,7 @@
  */
 
 #include <signal.h>
+#include <sys/wait.h>
 
 // Terminal manipulation
 #include "../../include/rterm.h"
