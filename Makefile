@@ -1,11 +1,12 @@
 CXXFLAGS = -std=c++17 -Wall -Wextra
-LIBRARYFLAGS = -lpthread
 
 # check for if lstdc++fs is needed
-CHECKSTDCPPFS=$(find / -name libstdc++fs*)
+CHECKSTDCPPFS=$(shell find /usr/lib -name libstdc++fs* 2>/dev/null)
 ifneq (,$(CHECKSTDCPPFS))
-   LIBRARYFLAGS = $(LIBRARYFLAGS) -lstdc++fs
+   FSFLAG = -lstdc++fs
 endif
+
+LIBRARYFLAGS = -lpthread $(FSFLAG)
 
 CC = g++
 DIRS = build
