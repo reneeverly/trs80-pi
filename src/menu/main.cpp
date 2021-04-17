@@ -17,8 +17,8 @@
  *      [x] Fetch list of files only in folder
  *      [x] Update time every second
  *      [ ] Figure out how to handle folders / navigate them
- *      [ ] Display list of files as table
- *          [ ] Filler entries where blank
+ *      [x] Display list of files as table
+ *          [x] Filler entries where blank
  *      [ ] Allow navigation of table
  *          [ ] Right/left keys (with wrap, even to front)
  *          [ ] Up/down keys (no wrap)
@@ -50,6 +50,9 @@
 
 // Keyboard
 #include "../../include/rkeyboard.h"
+
+// FileBrowser
+# include "FileBrowser.h"
 
 using namespace std;
 
@@ -91,9 +94,7 @@ int main() {
    }
 
    // Display list of files
-   for (size_t i = 0; i < files.size(); i++) {
-      cout << files[i] << endl;
-   }
+   FileBrowser fb(&rt, &files);
    
    // move the cursor to the prompt line
    rt.moveCursor(rt.lines - 1, 8);
@@ -117,6 +118,9 @@ int main() {
    int c;
    while(true) {
       c = getch();
+      
+      // lock cout mutex
+      pthread_mutex_lock(&lock_x);
    
       if (c && c != ESCAPEKEY) {
          // Depending upon how this works, we might need to
@@ -126,15 +130,18 @@ int main() {
          int resultant = resolveEscapeSequence();
    
          if (resultant == KEY_RIGHT) {
-            // right
+            fb.pressedRight();
          } else if (resultant == KEY_LEFT) {
-            // left
+            fb.pressedLeft();
          } else if (resultant == KEY_UP) {
             // up
          } else if (resultant == KEY_DOWN) {
             // down
          }
       }
+
+      // unlock cout mutex
+      pthread_mutex_unlock(&lock_x);
    }
 
    // Send signal to clock worker

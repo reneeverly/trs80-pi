@@ -1,0 +1,145 @@
+/*
+ * Class: rtui
+ * Program: menu
+ * Project: reneeverly/trs80-pi
+ * License: Apache 2.0
+ * Author: Renee Waverly Sonntag
+ * 
+ * Description:
+ *
+ *      Provides a file browser which takes advantage of rterm and handles
+ *      all drawing functionality related to selecting a file.
+ */
+
+#ifndef FILEBROWSER_H
+#define FILEBROWSER_H
+
+#include <string>
+#include <vector>
+
+#include "../../include/rterm.h"
+
+class FileBrowser {
+   private:
+      rterm* rt;
+
+      const vector<string>* items;
+      size_t selectedIndex;
+
+      size_t itemsPerLine;
+      
+   public:
+      FileBrowser(rterm*, const vector<string>*);
+
+      void redrawTable();
+
+      void pressedLeft();
+      void pressedRight();
+      void pressedUp();
+      void pressedDown();
+      void setIndex(const size_t);
+
+      size_t getIndex();
+};
+
+/**
+ * @constructs FileBrowser
+ * @param {rterm*} newrt - the rterm object to reference for terminal manip.
+ */
+FileBrowser::FileBrowser(rterm* newrt, const vector<string>* newitems) {
+   rt = newrt;
+   items = newitems;
+   selectedIndex = 0;
+
+   redrawTable();
+}
+
+void FileBrowser::redrawTable() {
+   size_t preferredNameLength;
+
+   // Get the longest filename in the vector
+   size_t longestNameLength = 0;
+   for (auto iter : *items) {
+      if (iter.length() > longestNameLength) {
+         longestNameLength = iter.length();
+      }
+   }
+   longestNameLength++; // allow for spacing
+
+   if (longestNameLength > (rt->cols / 4)) {
+      // cap the length if it's longer than one fourth of the screen width
+      preferredNameLength = (rt->cols / 4);
+   } else {
+      // let's loop until we get an ideal number of columns
+      for (size_t i = 5; i < 16; i++) {
+         preferredNameLength = rt->cols / (i-1);
+         if (longestNameLength > (rt->cols / i)) {
+            break;
+         }
+      }
+   }
+
+   // adjust the object-wide variable because it's used by pressedDown/Up
+   itemsPerLine = rt->cols / preferredNameLength;
+
+   size_t itemsPerPage = itemsPerLine * (rt->lines - 2);
+
+   // determine which page we need to render
+   size_t pageNumber = selectedIndex / itemsPerPage;
+
+   // Save cursor location
+   rt->saveCursor();
+
+   // render items
+   rt->moveCursor(1,0);
+   size_t itemsInThisLine = 0;
+   for (size_t i = (pageNumber * itemsPerPage); i < ((pageNumber + 1) * itemsPerPage); i++) {
+      cout << ((i == selectedIndex) ? rt->getReverse() : "")
+           << setw(preferredNameLength) << left
+           << ((i < items->size()) ? " " + items->at(i) : " -.-")
+           << ((i == selectedIndex) ? rt->getResetAttributes() : "");
+
+      itemsInThisLine++;
+
+      if (itemsInThisLine >= itemsPerLine) {
+         itemsInThisLine = 0;
+         cout << endl;
+      }
+   }
+
+   // restore cursor location
+   rt->restoreCursor();
+}
+
+void FileBrowser::pressedLeft() {
+   selectedIndex--;
+
+   // Account for out of bounds (wrap to end)
+   // IMPORTANT: size_t cannot be less than 0
+   // so we have to use the same check as in pressedRight
+   // but we'll set it to the last item rather than the first
+   if (selectedIndex >= items->size()) {
+      selectedIndex = items->size() - 1;
+   }
+
+   redrawTable();
+}
+
+void FileBrowser::pressedRight() {
+   selectedIndex++;
+   
+   // Account for out of bounds (wrap to start)
+   if (selectedIndex >= items->size()) {
+      selectedIndex = 0;
+   }
+
+   redrawTable();
+}
+
+void FileBrowser::pressedUp() {
+}
+
+void FileBrowser::pressedDown() {
+}
+
+#endif
