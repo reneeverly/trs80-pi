@@ -31,9 +31,15 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <string>
+#include <sstream>
+#include <map>
 
 // Terminal manipulation
 #include "../../include/rterm.h"
+
+// Text User Interface
+#include "../../include/rtui.h"
 
 // Keyboard
 #include "../../include/rkeyboard.h"
@@ -44,16 +50,36 @@ using namespace std;
 void drawFunctionLabels();
 
 rterm rt;
+rtui ui(&rt);
 
 #define ESCAPEKEY 27
 
 int main(void) {
+   string midiport;
+
    rt.clear();
 
    // Function key labels
-   drawFunctionLabels();
+   ui.drawFunctionLabels("Rcrd", "Play", "Prev", "Next",
+      "Stop", "", "Port", "Menu");
+   ui.scrollSpecial();
 
    rt.moveCursor(0, 0);
+
+   // get the midi ports
+   string rawports = rt.exec("arecordmidi -l");
+   istringstream rawportlist(rawports);
+   map<string, string> midiports;
+   while (!rawportlist.eof()) {
+      // get the actual port number
+      string portnum;
+      rawportlist >> portnum;
+      // get the label (and extra field)
+      char description[256];
+      rawportlist.getline(description, 256);
+      // package it up
+      midiports.emplace(portnum, description);
+   } 
 
    // Character input loop
    int c;
@@ -92,7 +118,7 @@ int main(void) {
             // f1
             childpid = fork();
             if (childpid == 0) {
-               execlp("arecordmidi", "arecordmidi", "-p", "20:0", "filename.mid");
+               execlp("arecordmidi", "arecordmidi", ("--port=" + midiport).c_str(), "filename.mid");
                cout << "Failed! (Could not exec.)" << endl;
                exit(-1);
             } else if (childpid < 0) {
@@ -106,7 +132,7 @@ int main(void) {
             // f2
             childpid = fork();
             if (childpid == 0) {
-               execlp("aplaymidi", "aplaymidi", "--port=20:0", "filename.mid");
+               execlp("aplaymidi", "aplaymidi", ("--port=" + midiport).c_str(), "filename.mid");
                cout << "Failed! (Could not exec.)" << endl;
                exit(-1);
             } else if (childpid < 0) {
@@ -137,9 +163,11 @@ int main(void) {
             // f6
          } else if (resultant == KEY_F7) {
             // f7
-            cout << "Switch port." << endl;
+            for (auto& x: midiports)
+               cout << x.first << ":" << x.second << endl;
          } else if (resultant == KEY_F8) {
             // f8
+            ui.scrollDefault();
             exit(0);
          }
       }
