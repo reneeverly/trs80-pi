@@ -54,6 +54,11 @@ FileBrowser::FileBrowser(rterm* newrt, const vector<string>* newitems) {
    redrawTable();
 }
 
+/**
+ * @method redrawTable
+ * Does all of the calculations required for laying out the files in a table
+ * and then draw them to the screen.
+ */
 void FileBrowser::redrawTable() {
    size_t preferredNameLength;
 
@@ -94,9 +99,14 @@ void FileBrowser::redrawTable() {
    rt->moveCursor(1,0);
    size_t itemsInThisLine = 0;
    for (size_t i = (pageNumber * itemsPerPage); i < ((pageNumber + 1) * itemsPerPage); i++) {
+      string thisFileName = ((i < items->size()) ? " " + items->at(i) : " -.-");
+      if (thisFileName.length() > preferredNameLength) {
+         thisFileName = (thisFileName.substr(0, (preferredNameLength / 2) - 1) + "…" + thisFileName.substr(thisFileName.length() - (preferredNameLength / 2)));
+      }
+
       cout << ((i == selectedIndex) ? rt->getReverse() : "")
            << setw(preferredNameLength) << left
-           << ((i < items->size()) ? " " + items->at(i) : " -.-")
+           << thisFileName
            << ((i == selectedIndex) ? rt->getResetAttributes() : "");
 
       itemsInThisLine++;
@@ -111,6 +121,10 @@ void FileBrowser::redrawTable() {
    rt->restoreCursor();
 }
 
+/**
+ * @method pressedLeft
+ * Decrements the selectedIndex with wrapping to the end.
+ */
 void FileBrowser::pressedLeft() {
    selectedIndex--;
 
@@ -125,6 +139,10 @@ void FileBrowser::pressedLeft() {
    redrawTable();
 }
 
+/**
+ * @method pressedRight
+ * Increments the selectedIndex with wrapping to the start
+ */
 void FileBrowser::pressedRight() {
    selectedIndex++;
    
@@ -136,10 +154,42 @@ void FileBrowser::pressedRight() {
    redrawTable();
 }
 
+/**
+ * @method pressedUp
+ * Decrements the selectedIndex such that it sits in the same column
+ * but in the line above.
+ * If that number is out of range it will simply stay in the present
+ * location.
+ */
 void FileBrowser::pressedUp() {
+   selectedIndex -= itemsPerLine;
+
+   // Account for out of bounds (undo the subtraction)
+   // same caveat as wih pressedLeft, size_t has no less than 0,
+   // so we're just using the same comparison as in pressedDown
+   if (selectedIndex >= items->size()) {
+      selectedIndex += itemsPerLine;
+   }
+
+   redrawTable();
 }
 
+/**
+ * @method pressedDown
+ * Increments the selectedIndex such that it sits in the same column
+ * but in the line below.
+ * If that number is out of range it will simply stay in the present
+ * location.
+ */
 void FileBrowser::pressedDown() {
+   selectedIndex += itemsPerLine;
+
+   // Account for out of bounds (undo the addition)
+   if (selectedIndex >= items->size()) {
+      selectedIndex -= itemsPerLine;
+   }
+
+   redrawTable();
 }
 
 #endif

@@ -134,9 +134,9 @@ int main() {
          } else if (resultant == KEY_LEFT) {
             fb.pressedLeft();
          } else if (resultant == KEY_UP) {
-            // up
+            fb.pressedUp();
          } else if (resultant == KEY_DOWN) {
-            // down
+            fb.pressedDown();
          }
       }
 
