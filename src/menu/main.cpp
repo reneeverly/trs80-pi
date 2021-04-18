@@ -19,10 +19,10 @@
  *      [ ] Figure out how to handle folders / navigate them
  *      [x] Display list of files as table
  *          [x] Filler entries where blank
- *      [ ] Allow navigation of table
- *          [ ] Right/left keys (with wrap, even to front)
- *          [ ] Up/down keys (no wrap)
- *          [ ] Scroll window to show more than visible
+ *      [x] Allow navigation of table
+ *          [x] Right/left keys (with wrap, even to front)
+ *          [x] Up/down keys (no wrap)
+ *          [x] Scroll window to show more than visible
  *      [ ] fork/exec programs selected
  *      [ ] read keys into buffer for the "Select:" line
  *          [ ] Tab completion for existing files or programs
@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 // Time
 #include <chrono>
@@ -56,11 +57,6 @@
 
 using namespace std;
 
-// Forward declaration
-void writeDate();
-void drawInterface();
-void *workerForWriteDate(void *);
-
 // some constants
 #define ESCAPEKEY 27
 
@@ -69,9 +65,18 @@ typedef struct _thread_data_t {
 } thread_data_t;
 
 rterm rt;
+FileBrowser* fb;
 
 bool clock_loop;
 pthread_mutex_t lock_x;
+
+// Forward declaration
+void writeDate();
+void drawInterface();
+void *workerForWriteDate(void *);
+bool sortAlphabetic(string one, string two);
+bool sortReverseAlphabetic(string one, string two);
+void sigintHandler(int signum);
 
 int main() {
    // unbuffer output
@@ -79,22 +84,43 @@ int main() {
 
    // Clear screen
    rt.clear();
+
+   // register SIGING handler
+   signal(SIGINT, sigintHandler);
    
    // Render the corner labels
    drawInterface();
 
    // Get list of files in directory
    vector<string> files;
+   vector<string> apps;
    rt.moveCursor(1, 0);
    for (const auto & entry : filesystem::directory_iterator(".")) {
-      // omit directories for now
-      if (!filesystem::is_directory(entry)) {
-         files.push_back(entry.path().filename());
+      // omit directories and whatnot
+      if (filesystem::is_regular_file(entry)) {
+         // get permissions using bitwise and (not logical and)
+         if ((filesystem::status(entry).permissions() & filesystem::perms::others_exec) != filesystem::perms::none) {
+            // executable
+            apps.push_back(entry.path().filename());
+         } else {
+            // not executable
+            files.push_back(entry.path().filename());
+         }
       }
    }
 
+   // sort alphabetically
+   stable_sort(apps.begin(), apps.end(), sortReverseAlphabetic);
+   stable_sort(files.begin(), files.end(), sortAlphabetic);
+   
+   // prepend files with apps
+   for (auto appname : apps) {
+      files.emplace(files.begin(), appname);
+   }
+   
+
    // Display list of files
-   FileBrowser fb(&rt, &files);
+   fb = new FileBrowser(&rt, &files);
    
    // move the cursor to the prompt line
    rt.moveCursor(rt.lines - 1, 8);
@@ -130,13 +156,13 @@ int main() {
          int resultant = resolveEscapeSequence();
    
          if (resultant == KEY_RIGHT) {
-            fb.pressedRight();
+            fb->pressedRight();
          } else if (resultant == KEY_LEFT) {
-            fb.pressedLeft();
+            fb->pressedLeft();
          } else if (resultant == KEY_UP) {
-            fb.pressedUp();
+            fb->pressedUp();
          } else if (resultant == KEY_DOWN) {
-            fb.pressedDown();
+            fb->pressedDown();
          }
       }
 
@@ -224,4 +250,27 @@ void *workerForWriteDate(void *arg) {
 
    // clean up
    pthread_exit(NULL);
+}
+
+/**
+ * @function sortAlphabetic
+ * Via stable_sort sorts alphabetically
+ */
+bool sortAlphabetic(string one, string two) {
+   return one < two;
+}
+
+/**
+ * @function sortReverseAlphabetic
+ * Via stable_sort sorts reverse alphabetically
+ */
+bool sortReverseAlphabetic(string one, string two) {
+   return one > two;
+}
+
+void sigintHandler(int signum) {
+   // deconstruct FileBrowser (restore default terminal scroll)
+   delete fb;
+
+   exit(signum);
 }
