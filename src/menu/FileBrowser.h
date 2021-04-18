@@ -202,4 +202,15 @@ void FileBrowser::pressedDown() {
    redrawTable();
 }
 
+// setIndex
+
+/**
+ * @method getIndex
+ * Returns the selectedIndex
+ * @returns {size_t} the selectedIndex
+ */
+size_t FileBrowser::getIndex() {
+   return selectedIndex;
+}
+
 #endif

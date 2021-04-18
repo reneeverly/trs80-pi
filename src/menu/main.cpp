@@ -36,6 +36,9 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <signal.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 // Time
 #include <chrono>
@@ -142,6 +145,7 @@ int main() {
 
    // Character input loop
    int c;
+   string searchKey = "";
    while(true) {
       c = getch();
       
@@ -152,6 +156,29 @@ int main() {
          // Depending upon how this works, we might need to
          // buffer character input for new file creation or
          // "searching" for files that exist.
+         if ((c == '\n') && (searchKey.length() == 0)) {
+            // get index
+            size_t i = fb->getIndex();
+            // fork exec
+            //int pid = fork();
+            // exec(files[i]);
+         } else if ((c == '\n') && (searchKey.length() > 0)) {
+            // validate filename,
+               // forkexec
+         } else if ((c == '\t') && (searchKey.length() > 0)) {
+            // scan for partial matches
+            // if only one, set it
+            // else do nothing
+         } else if ((c == 0x08) || (c == 0x7f)) {
+            // backspace!
+            searchKey.pop_back();
+            // TODO: this only prints a space for certain terminals
+            cout << (char) c << " " << (char) c;
+         } else if ((c != '\t')) {
+            // a regular old letter
+            searchKey.push_back(c);
+            cout << (char) c;
+         }
       } else {
          int resultant = resolveEscapeSequence();
    

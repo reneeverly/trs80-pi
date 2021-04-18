@@ -44,6 +44,10 @@ using namespace std;
 #define KEY_F6 9
 #define KEY_F7 10
 #define KEY_F8 11
+#define KEY_F9 12 // not present on the TRS-80 Model 100
+#define KEY_F10 13 // not present on the TRS-80 Model 100
+//#define KEY_RSRVD 14
+#define KEY_ENT 15
 
 /**
  * @function getch
@@ -84,21 +88,25 @@ int resolveEscapeSequence() {
       // up     down    left    right
       // f1     f2      f3      f4
       // f5     f6      f7      f8
+      // f9     f10     rsrvd   enter
 
-      // vt100:
+      // vt100: (backspace as single character)
       "\x1BOA", "\x1BOB", "\x1BOC", "\x1BOD",
       "\x1BOP", "\x1BOQ", "\x1BOR", "\x1BOS",
       "\x1BOt", "\x1BOu", "\x1BOv", "\x1BOl",
+      "\x1BOw", "\x1BOx", "", "\x1BOM",
 
-      // rxvt:
+      // rxvt: (backspace as single character)
       "\x1B[A", "\x1B[B", "\x1B[C", "\x1B[D",
       "\x1B[11~", "\x1B[12~", "\x1B[13~", "\x1B[14~",
       "\x1B[15~", "\x1B[17~", "\x1B[18~", "\x1B[19~",
+      "\x1B[20~", "\x1B[21~", "", "\x1BOM",
 
       // A Raspberry Pi + IBM Model F setup produced different f1-f5 codes than expected:
       "", "", "", "",
       "\x1B[[A", "\x1B[[B", "\x1B[[C", "\x1B[[D",
       "\x1B[[E", "", "", "",
+      "", "", "", ""
    };
    
    while (matches > 0) {
@@ -111,7 +119,7 @@ int resolveEscapeSequence() {
          if (candidates[i].find(sequence) != string::npos) {
             matches++;
             if (candidates[i].length() == sequence.length()) {
-               return i % 12;
+               return i % 16;
             }
          }
       }
