@@ -9,6 +9,8 @@
  *
  *      Provides a file browser which takes advantage of rterm and handles
  *      all drawing functionality related to selecting a file.
+ *
+ *      TODO: utf8 safety
  */
 
 #ifndef FILEBROWSER_H

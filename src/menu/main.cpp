@@ -14,19 +14,15 @@
  *      in rterm.h.
  *
  *      TODO:
- *      [x] Fetch list of files only in folder
- *      [x] Update time every second
  *      [ ] Figure out how to handle folders / navigate them
- *      [x] Display list of files as table
- *          [x] Filler entries where blank
- *      [x] Allow navigation of table
- *          [x] Right/left keys (with wrap, even to front)
- *          [x] Up/down keys (no wrap)
- *          [x] Scroll window to show more than visible
  *      [ ] fork/exec programs selected
+ *      [ ] config file? for default programs given extension/format
  *      [ ] read keys into buffer for the "Select:" line
+ *          [x] Read utf8 characters into buffer
+ *          [x] Pop utf8 characters for backspace/delete
  *          [ ] Tab completion for existing files or programs
  *          [ ] Create new text file when path not exist
+ *          [ ] Key combo to clear buffer
  */
 
 #include <iomanip>
@@ -80,6 +76,8 @@ void *workerForWriteDate(void *);
 bool sortAlphabetic(string one, string two);
 bool sortReverseAlphabetic(string one, string two);
 void sigintHandler(int signum);
+void pop_back_utf8(string& utf8);
+size_t length_utf8(const string& str);
 
 int main() {
    // unbuffer output
@@ -125,8 +123,6 @@ int main() {
    // Display list of files
    fb = new FileBrowser(&rt, &files);
    
-   // move the cursor to the prompt line
-   rt.moveCursor(rt.lines - 1, 8);
 
    // start clock worker
    int rc;
@@ -143,6 +139,9 @@ int main() {
       rt.restoreCursor();
    } 
 
+   // move the cursor to the prompt line
+   rt.moveCursor(rt.lines - 1, 8);
+
    // Character input loop
    int c;
    string searchKey = "";
@@ -153,9 +152,7 @@ int main() {
       pthread_mutex_lock(&lock_x);
    
       if (c && c != ESCAPEKEY) {
-         // Depending upon how this works, we might need to
-         // buffer character input for new file creation or
-         // "searching" for files that exist.
+
          if ((c == '\n') && (searchKey.length() == 0)) {
             // get index
             size_t i = fb->getIndex();
@@ -171,14 +168,21 @@ int main() {
             // else do nothing
          } else if ((c == 0x08) || (c == 0x7f)) {
             // backspace!
-            searchKey.pop_back();
-            // TODO: this only prints a space for certain terminals
-            cout << (char) c << " " << (char) c;
-         } else if ((c != '\t')) {
+            pop_back_utf8(searchKey);
+         } else if (c >= 0x20 ) {
             // a regular old letter
             searchKey.push_back(c);
-            cout << (char) c;
          }
+         
+         // move cursor to prompt line
+         rt.moveCursor(rt.lines - 1, 8);
+         // print length + 1 blanks
+         cout << setw(length_utf8(searchKey) + 1) << "";
+            
+         // move cursor to prompt line
+         rt.moveCursor(rt.lines - 1, 8);
+         // print searchKey in full
+         cout << searchKey;
       } else {
          int resultant = resolveEscapeSequence();
    
@@ -300,4 +304,38 @@ void sigintHandler(int signum) {
    delete fb;
 
    exit(signum);
+}
+
+/**
+ * @function pop_back_utf8
+ * https://stackoverflow.com/questions/37623359/how-to-remove-the-last-character-of-a-utf-8-string-in-c
+ */
+void pop_back_utf8(string& utf8) {
+    if(utf8.empty())
+        return;
+
+    auto cp = utf8.data() + utf8.size();
+    while(--cp >= utf8.data() && ((*cp & 0b10000000) && !(*cp & 0b01000000))) {}
+    if(cp >= utf8.data())
+        utf8.resize(cp - utf8.data());
+}
+
+/**
+ * @function length_utf8
+ * https://stackoverflow.com/questions/4063146/getting-the-actual-length-of-a-utf-8-encoded-stdstring
+ */
+size_t length_utf8(const string& str) {
+    size_t c,i,ix,q;
+    for (q=0, i=0, ix=str.length(); i < ix; i++, q++)
+    {
+        c = (unsigned char) str[i];
+        if      (c>=0   && c<=127) i+=0;
+        else if ((c & 0xE0) == 0xC0) i+=1;
+        else if ((c & 0xF0) == 0xE0) i+=2;
+        else if ((c & 0xF8) == 0xF0) i+=3;
+        //else if (($c & 0xFC) == 0xF8) i+=4; // 111110bb //byte 5, unnecessary in 4 byte UTF-8
+        //else if (($c & 0xFE) == 0xFC) i+=5; // 1111110b //byte 6, unnecessary in 4 byte UTF-8
+        else return 0;//invalid utf8
+    }
+    return q;
 }
