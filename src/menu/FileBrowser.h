@@ -9,8 +9,6 @@
  *
  *      Provides a file browser which takes advantage of rterm and handles
  *      all drawing functionality related to selecting a file.
- *
- *      TODO: utf8 safety
  */
 
 #ifndef FILEBROWSER_H
@@ -19,7 +17,11 @@
 #include <string>
 #include <vector>
 
+// terminal manipulation
 #include "../../include/rterm.h"
+
+// Temporary UTF8 support
+#include "../../include/temporary_utf8.h"
 
 class FileBrowser {
    private:
@@ -77,8 +79,8 @@ void FileBrowser::redrawTable() {
    // Get the longest filename in the vector
    size_t longestNameLength = 0;
    for (auto iter : *items) {
-      if (iter.length() > longestNameLength) {
-         longestNameLength = iter.length();
+      if (length_utf8(iter) > longestNameLength) {
+         longestNameLength = length_utf8(iter);
       }
    }
    longestNameLength++; // allow for spacing
@@ -111,9 +113,12 @@ void FileBrowser::redrawTable() {
    rt->moveCursor(1,0);
    size_t itemsInThisLine = 0;
    for (size_t i = (pageNumber * itemsPerPage); i < ((pageNumber + 1) * itemsPerPage); i++) {
+      // get item name or fill with " -.-" if out of range
       string thisFileName = ((i < items->size()) ? " " + items->at(i) : " -.-");
-      if (thisFileName.length() > preferredNameLength) {
-         thisFileName = (thisFileName.substr(0, (preferredNameLength / 2) - 1) + "…" + thisFileName.substr(thisFileName.length() - (preferredNameLength / 2)));
+
+      // check if length is longer than available per column
+      if (length_utf8(thisFileName) > preferredNameLength) {
+         thisFileName = (substr_utf8(thisFileName, 0, (preferredNameLength / 2) - 1) + "…" + substr_utf8(thisFileName, length_utf8(thisFileName) - (preferredNameLength / 2)));
       }
 
       cout << ((i == selectedIndex) ? rt->getReverse() : "")

@@ -20,7 +20,7 @@
  *      [ ] read keys into buffer for the "Select:" line
  *          [x] Read utf8 characters into buffer
  *          [x] Pop utf8 characters for backspace/delete
- *          [ ] Tab completion for existing files or programs
+ *          [x] Tab completion for existing files or programs
  *          [ ] Create new text file when path not exist
  *          [ ] Key combo to clear buffer
  */
@@ -52,7 +52,10 @@
 #include "../../include/rkeyboard.h"
 
 // FileBrowser
-# include "FileBrowser.h"
+#include "FileBrowser.h"
+
+// Temporary UTF8 support
+#include "../../include/temporary_utf8.h"
 
 using namespace std;
 
@@ -164,8 +167,17 @@ int main() {
                // forkexec
          } else if ((c == '\t') && (searchKey.length() > 0)) {
             // scan for partial matches
-            // if only one, set it
-            // else do nothing
+            vector<string> autocompletes;
+            for (auto candidate : files) {
+               if (candidate.find(searchKey) == 0) {
+                  autocompletes.push_back(candidate);
+               }
+            }
+
+            // if only one match, autocomplete
+            if (autocompletes.size() == 1) {
+               searchKey = autocompletes[0];
+            }
          } else if ((c == 0x08) || (c == 0x7f)) {
             // backspace!
             pop_back_utf8(searchKey);
@@ -306,36 +318,4 @@ void sigintHandler(int signum) {
    exit(signum);
 }
 
-/**
- * @function pop_back_utf8
- * https://stackoverflow.com/questions/37623359/how-to-remove-the-last-character-of-a-utf-8-string-in-c
- */
-void pop_back_utf8(string& utf8) {
-    if(utf8.empty())
-        return;
 
-    auto cp = utf8.data() + utf8.size();
-    while(--cp >= utf8.data() && ((*cp & 0b10000000) && !(*cp & 0b01000000))) {}
-    if(cp >= utf8.data())
-        utf8.resize(cp - utf8.data());
-}
-
-/**
- * @function length_utf8
- * https://stackoverflow.com/questions/4063146/getting-the-actual-length-of-a-utf-8-encoded-stdstring
- */
-size_t length_utf8(const string& str) {
-    size_t c,i,ix,q;
-    for (q=0, i=0, ix=str.length(); i < ix; i++, q++)
-    {
-        c = (unsigned char) str[i];
-        if      (c>=0   && c<=127) i+=0;
-        else if ((c & 0xE0) == 0xC0) i+=1;
-        else if ((c & 0xF0) == 0xE0) i+=2;
-        else if ((c & 0xF8) == 0xF0) i+=3;
-        //else if (($c & 0xFC) == 0xF8) i+=4; // 111110bb //byte 5, unnecessary in 4 byte UTF-8
-        //else if (($c & 0xFE) == 0xFC) i+=5; // 1111110b //byte 6, unnecessary in 4 byte UTF-8
-        else return 0;//invalid utf8
-    }
-    return q;
-}
