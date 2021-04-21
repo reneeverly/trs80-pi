@@ -173,37 +173,3 @@ int main(void) {
       }
    }
 }
-
-void drawFunctionLabels() {
-   rt.saveCursor();
-
-   // F1
-   rt.moveCursor(rt.lines - 1, (rt.cols * 0) / 8);
-   cout << "Rcrd";
-
-   // F2
-   rt.moveCursor(rt.lines - 1, (rt.cols * 1) / 8);
-   cout << "Play";
-
-   // F3
-   rt.moveCursor(rt.lines - 1, (rt.cols * 2) / 8);
-   cout << "Last";
-
-   // F4
-   rt.moveCursor(rt.lines - 1, (rt.cols * 3) / 8);
-   cout << "Next";
-
-   // F5
-   rt.moveCursor(rt.lines - 1, (rt.cols * 4) / 8);
-   cout << "Stop";
-
-   // F7
-   rt.moveCursor(rt.lines - 1, (rt.cols * 6) / 8);
-   cout << "Port";
-
-   // F8
-   rt.moveCursor(rt.lines - 1, (rt.cols * 7) / 8);
-   cout << "Menu";
-
-   rt.restoreCursor();
-}

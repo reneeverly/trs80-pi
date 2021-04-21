@@ -44,8 +44,8 @@ class rterm {
       string processUnescapedSequence(const string, const int, const int);
       
    public:
-      int cols;
-      int lines;
+      size_t cols;
+      size_t lines;
       
       rterm();
       string exec(const char*);

@@ -16,13 +16,19 @@
  *      TODO:
  *      [ ] Figure out how to handle folders / navigate them
  *      [ ] fork/exec programs selected
+ *          [x] fork
+ *              [ ] Handle fork failure
+ *          [x] exec
+ *              [x] Handle exec failure
+ *          [x] wait
  *      [ ] config file? for default programs given extension/format
+ *          [x] Temporary: just open the file in vi
  *      [ ] read keys into buffer for the "Select:" line
  *          [x] Read utf8 characters into buffer
  *          [x] Pop utf8 characters for backspace/delete
  *          [x] Tab completion for existing files or programs
  *          [ ] Create new text file when path not exist
- *          [~] Key combo to clear buffer
+ *          [x] Key combo to clear buffer
  *              [x] When invalid name and [enter] pressed, clear
  *                  This is the original m100 behavior, but might not
  *                  be ideal for a modern implementation.
@@ -167,7 +173,7 @@ int main() {
             childpid = fork();
             if (childpid == 0) {
                // in child process
-               exec_file(files[i]);
+               exec_file(files.at(i));
             } else if (childpid < 0) {
                // error
             } else if (childpid > 0) {
@@ -381,7 +387,7 @@ void sigintHandler(int signum) {
 
 void exec_file(string filename) {
    // in child process
-   execlp("/usr/bin/vi", "/usr/bin/vi", filename.c_str());
+   execlp("vi", "vi", ("./" + filename).c_str(), NULL);
    // if reached, exec failed
    rt.clear();
    cout << "Failed to exec." << endl;
