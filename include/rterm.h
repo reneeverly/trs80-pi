@@ -37,15 +37,18 @@ class rterm {
       string sResetAttributes;
       string sSaveCursor;
       string sRestoreCursor;
+      string sChangeScroll;
+      string sResetTerminal;
       
-      string exec(const char*);
       string ToHex(const string&, const bool); /* for debugging */
+      string processUnescapedSequence(const string, const int, const int);
       
    public:
-      int cols;
-      int lines;
+      size_t cols;
+      size_t lines;
       
       rterm();
+      string exec(const char*);
       
       bool updateDimensions();
       void clear();
@@ -54,6 +57,8 @@ class rterm {
       void resetAttributes();
       void saveCursor();
       void restoreCursor();
+      void changeScrollRegion(const int, const int);
+      void resetTerminal();
       
       string getReverse();
       string getResetAttributes();
@@ -83,13 +88,18 @@ rterm::rterm() {
 
    // Get the control sequence for restore cursor
    sRestoreCursor = exec("tput rc");
+
+   // Get the unescaped control sequence for changing the scroll region
+   sChangeScroll = exec("tput csr");
+
+   // Get the control sequence for resetting the terminal
+   sResetTerminal = exec("tput reset");
    
    // Get the dimensions of the terminal
    updateDimensions();
 }
 
 /**
- * @private
  * @method exec
  * Executes the provided command in the shell and returns the std output.
  * @param {const char*} cmd - the shell command to execute.
@@ -139,39 +149,51 @@ bool rterm::updateDimensions() {
  * @todo Check for valid coordinates given current terminal dimensions.
  */
 void rterm::moveCursor(const int line, const int col) {
-   string smc = sMoveCursor;
-   int nCol = col;
-   int nLine = line;
+   cout << processUnescapedSequence(sMoveCursor, line, col);
+}
+
+/**
+ * @private
+ * @method processUnescapedSequence
+ * Processes the sequence with the provided parameters
+ * @param {const string} originalSequence - the sequence to process
+ * @param {const int} param1 - the first parameter
+ * @param {const int} param2 - the second parameter
+ */
+string rterm::processUnescapedSequence(const string originalSequence, const int param1, const int param2) {
+   string swap = originalSequence;
+   int nParam1 = param1;
+   int nParam2 = param2;
    
    // Check for flag to increment numeric parameters by 1.
-   size_t i = smc.find("%i");
+   size_t i = swap.find("%i");
    if (i != string::npos) {
-      smc.erase(i,2);
-      nCol += 1;
-      nLine += 1;
+      swap.erase(i,2);
+      nParam1 += 1;
+      nParam2 += 1;
    }
    
    // Filter through parameters and printing them
    stack<int> pStack;
-   size_t nextP = smc.find("%p");
-   size_t nextD = smc.find("%d");
+   size_t nextP = swap.find("%p");
+   size_t nextD = swap.find("%d");
    while ((nextP != string::npos) || (nextD != string::npos)) {
       if (nextP < nextD) {
-         if (smc[nextP + 2] == '1') {
-            pStack.push(nLine);
+         if (swap[nextP + 2] == '1') {
+            pStack.push(nParam1);
          } else {
-            pStack.push(nCol);
+            pStack.push(nParam2);
          }
-         smc.erase(nextP, 3);
+         swap.erase(nextP, 3);
       } else {
-         smc.replace(nextD, 2, to_string(pStack.top()));
+         swap.replace(nextD, 2, to_string(pStack.top()));
          pStack.pop();
       }
       
-      nextP = smc.find("%p");
-      nextD = smc.find("%d");
+      nextP = swap.find("%p");
+      nextD = swap.find("%d");
    }
-   cout << smc;
+   return swap;
 }
 
 /**
@@ -216,6 +238,24 @@ void rterm::saveCursor() {
  */
 void rterm::restoreCursor() {
    cout << sRestoreCursor;
+}
+
+/**
+ * @method changeScrollRegion
+ * Adjusts the scroll region to be from the provided lines
+ * @param {const int} firstline - the first line to be in the scroll region
+ * @param {const int} lastline - the last line to be in the scroll region
+ */
+void rterm::changeScrollRegion(const int firstline, const int lastline) {
+   cout << processUnescapedSequence(sChangeScroll, firstline, lastline);
+}
+
+/**
+ * @method resetTerminal
+ * Resets the terminal to system defaults for all parameters.
+ */
+void rterm::resetTerminal() {
+   cout << sResetTerminal;
 }
 
 /**

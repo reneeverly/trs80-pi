@@ -14,19 +14,24 @@
  *      in rterm.h.
  *
  *      TODO:
- *      [x] Fetch list of files only in folder
- *      [x] Update time every second
  *      [ ] Figure out how to handle folders / navigate them
- *      [ ] Display list of files as table
- *          [ ] Filler entries where blank
- *      [ ] Allow navigation of table
- *          [ ] Right/left keys (with wrap, even to front)
- *          [ ] Up/down keys (no wrap)
- *          [ ] Scroll window to show more than visible
  *      [ ] fork/exec programs selected
+ *          [x] fork
+ *              [ ] Handle fork failure
+ *          [x] exec
+ *              [x] Handle exec failure
+ *          [x] wait
+ *      [ ] config file? for default programs given extension/format
+ *          [x] Temporary: just open the file in vi
  *      [ ] read keys into buffer for the "Select:" line
- *          [ ] Tab completion for existing files or programs
+ *          [x] Read utf8 characters into buffer
+ *          [x] Pop utf8 characters for backspace/delete
+ *          [x] Tab completion for existing files or programs
  *          [ ] Create new text file when path not exist
+ *          [x] Key combo to clear buffer
+ *              [x] When invalid name and [enter] pressed, clear
+ *                  This is the original m100 behavior, but might not
+ *                  be ideal for a modern implementation.
  */
 
 #include <iomanip>
@@ -35,6 +40,10 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <signal.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 // Time
 #include <chrono>
@@ -51,12 +60,13 @@
 // Keyboard
 #include "../../include/rkeyboard.h"
 
-using namespace std;
+// FileBrowser
+#include "FileBrowser.h"
 
-// Forward declaration
-void writeDate();
-void drawInterface();
-void *workerForWriteDate(void *);
+// Temporary UTF8 support
+#include "../../include/temporary_utf8.h"
+
+using namespace std;
 
 // some constants
 #define ESCAPEKEY 27
@@ -66,9 +76,19 @@ typedef struct _thread_data_t {
 } thread_data_t;
 
 rterm rt;
+FileBrowser* fb;
 
 bool clock_loop;
 pthread_mutex_t lock_x;
+
+// Forward declaration
+void writeDate();
+void drawInterface();
+void *workerForWriteDate(void *);
+bool sortAlphabetic(string one, string two);
+bool sortReverseAlphabetic(string one, string two);
+void sigintHandler(int signum);
+void exec_file(string filename);
 
 int main() {
    // unbuffer output
@@ -76,27 +96,44 @@ int main() {
 
    // Clear screen
    rt.clear();
+
+   // register SIGING handler
+   signal(SIGINT, sigintHandler);
    
    // Render the corner labels
    drawInterface();
 
    // Get list of files in directory
    vector<string> files;
+   vector<string> apps;
    rt.moveCursor(1, 0);
    for (const auto & entry : filesystem::directory_iterator(".")) {
-      // omit directories for now
-      if (!filesystem::is_directory(entry)) {
-         files.push_back(entry.path().filename());
+      // omit directories and whatnot
+      if (filesystem::is_regular_file(entry)) {
+         // get permissions using bitwise and (not logical and)
+         if ((filesystem::status(entry).permissions() & filesystem::perms::others_exec) != filesystem::perms::none) {
+            // executable
+            apps.push_back(entry.path().filename());
+         } else {
+            // not executable
+            files.push_back(entry.path().filename());
+         }
       }
    }
 
-   // Display list of files
-   for (int i = 0; i < files.size(); i++) {
-      cout << files[i] << endl;
+   // sort alphabetically
+   stable_sort(apps.begin(), apps.end(), sortReverseAlphabetic);
+   stable_sort(files.begin(), files.end(), sortAlphabetic);
+   
+   // prepend files with apps
+   for (auto appname : apps) {
+      files.emplace(files.begin(), appname);
    }
    
-   // move the cursor to the prompt line
-   rt.moveCursor(rt.lines - 1, 8);
+
+   // Display list of files
+   fb = new FileBrowser(&rt, &files);
+   
 
    // start clock worker
    int rc;
@@ -113,28 +150,132 @@ int main() {
       rt.restoreCursor();
    } 
 
+   // move the cursor to the prompt line
+   rt.moveCursor(rt.lines - 1, 8);
+
    // Character input loop
    int c;
+   string searchKey = "";
    while(true) {
       c = getch();
+      
+      // lock cout mutex
+      pthread_mutex_lock(&lock_x);
    
       if (c && c != ESCAPEKEY) {
-         // Depending upon how this works, we might need to
-         // buffer character input for new file creation or
-         // "searching" for files that exist.
+
+         if ((c == '\n') && (searchKey.length() == 0)) {
+            // get index
+            size_t i = fb->getIndex();
+            int childpid = -1;
+            childpid = fork();
+            if (childpid == 0) {
+               // in child process
+               exec_file(files.at(i));
+            } else if (childpid < 0) {
+               // error
+            } else if (childpid > 0) {
+               // in parent
+               wait(NULL);
+               // clear the screen
+               rt.clear();
+               // draw the corner labels
+               drawInterface();
+               // reset the cursor for the filebrowser
+               fb->setIndex(0);
+               // redraw the center panel
+               fb->redrawTable();
+            }
+         } else if ((c == '\n') && (searchKey.length() > 0)) {
+            // As per the original behavior of the TRS-80 Model 100,
+            // if the input is not the full name of a thing,
+            // clear buffer
+
+            // validate filename
+            int childpid = -1;
+            for (auto candidate : files) {
+               if (candidate.find(searchKey) == 0 && candidate.length() == searchKey.length()) {
+                  // fork exec
+                  childpid = fork();
+                  if (childpid == 0) {
+                     // in child process
+                     exec_file(searchKey);
+                  } else if (childpid < 0) {
+                     // error
+                  }
+                  break;
+               }
+            }
+
+            // check if found match
+            if (childpid > 0) {
+               // found match and in parent
+               wait(NULL);
+               // clear the screen
+               rt.clear();
+               // draw the corner labels
+               drawInterface();
+               // reset the cursor for the filebrowser
+               fb->setIndex(0);
+               // redraw the center panel
+               fb->redrawTable();
+               // clear the buffer
+               searchKey = "";
+            } else {
+               // there were no matches!
+               // visually clear the area where the buffer is
+               rt.moveCursor(rt.lines - 1, 8);
+               cout << setw(length_utf8(searchKey)) << "";
+               // clear the buffer
+               searchKey = "";
+            }
+               
+         } else if ((c == '\t') && (searchKey.length() > 0)) {
+            // scan for partial matches
+            vector<string> autocompletes;
+            for (auto candidate : files) {
+               if (candidate.find(searchKey) == 0) {
+                  autocompletes.push_back(candidate);
+               }
+            }
+
+            // if only one match, autocomplete
+            if (autocompletes.size() == 1) {
+               searchKey = autocompletes[0];
+            }
+         } else if ((c == 0x08) || (c == 0x7f)) {
+            // backspace!
+            pop_back_utf8(searchKey);
+         } else if (c >= 0x20 ) {
+            // a regular old letter
+            searchKey.push_back(c);
+         }
+         
+         // move cursor to prompt line
+         rt.moveCursor(rt.lines - 1, 8);
+         // print length + 1 blanks
+         cout << setw(length_utf8(searchKey) + 1) << "";
+            
+         // move cursor to prompt line
+         rt.moveCursor(rt.lines - 1, 8);
+         // print searchKey in full
+         cout << searchKey;
       } else {
          int resultant = resolveEscapeSequence();
    
          if (resultant == KEY_RIGHT) {
-            // right
+            fb->pressedRight();
          } else if (resultant == KEY_LEFT) {
-            // left
+            fb->pressedLeft();
          } else if (resultant == KEY_UP) {
-            // up
+            fb->pressedUp();
          } else if (resultant == KEY_DOWN) {
-            // down
+            fb->pressedDown();
          }
       }
+
+      // unlock cout mutex
+      pthread_mutex_unlock(&lock_x);
    }
 
    // Send signal to clock worker
@@ -172,7 +313,7 @@ void drawInterface() {
    // Write disk usage (bottom right)
    rt.moveCursor(rt.lines - 1, rt.cols - 30);
    filesystem::space_info root = filesystem::space("/");
-   cout << setw(19) << root.available << " Bytes free";
+   cout << right << setw(19) << root.available << " Bytes free";
 }
 
 /**
@@ -217,4 +358,55 @@ void *workerForWriteDate(void *arg) {
 
    // clean up
    pthread_exit(NULL);
+}
+
+/**
+ * @function sortAlphabetic
+ * Via stable_sort sorts alphabetically
+ */
+bool sortAlphabetic(string one, string two) {
+   return one < two;
+}
+
+/**
+ * @function sortReverseAlphabetic
+ * Via stable_sort sorts reverse alphabetically
+ */
+bool sortReverseAlphabetic(string one, string two) {
+   return one > two;
+}
+
+/**
+ * @function sigintHandler
+ * Handles SIGINT signal before exiting.
+ * Weirdly this hasn't resolved the issues I was facing on the Pi
+ * running in the Linux Framebuffer, but I think it resolved the
+ * issues in xterm.  Leaving as is for now.
+ */
+void sigintHandler(int signum) {
+   // reset terminal
+   rt.resetTerminal();
+
+   exit(signum);
+}
+
+/**
+ * @function exec_file
+ * Finds a suitable executable for the provided file, or
+ * executes it directly.
+ * Handles failure by displaying message before yielding back
+ * to the parent process.
+ * @param {string} filename - the file
+ */
+void exec_file(string filename) {
+   // in child process
+   // TODO: dynamically detect which way to run the file rather
+   // than blanketly using vim
+   execlp("vi", "vi", ("./" + filename).c_str(), NULL);
+   // if reached, exec failed
+   rt.clear();
+   cout << "Failed to exec." << endl;
+   cout << "Press any key to continue...";
+   getch();
+   exit(-1);
 }
