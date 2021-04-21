@@ -202,7 +202,15 @@ void FileBrowser::pressedDown() {
    redrawTable();
 }
 
-// setIndex
+/**
+ * @method setIndex
+ * Sets the selectedIndex
+ * @param {const size_t} newIndex - the new index to select
+ */
+void FileBrowser::setIndex(const size_t newIndex) {
+   selectedIndex = newIndex;
+   redrawTable();
+}
 
 /**
  * @method getIndex

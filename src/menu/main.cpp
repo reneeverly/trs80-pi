@@ -22,7 +22,10 @@
  *          [x] Pop utf8 characters for backspace/delete
  *          [x] Tab completion for existing files or programs
  *          [ ] Create new text file when path not exist
- *          [ ] Key combo to clear buffer
+ *          [~] Key combo to clear buffer
+ *              [x] When invalid name and [enter] pressed, clear
+ *                  This is the original m100 behavior, but might not
+ *                  be ideal for a modern implementation.
  */
 
 #include <iomanip>
@@ -81,6 +84,7 @@ bool sortReverseAlphabetic(string one, string two);
 void sigintHandler(int signum);
 void pop_back_utf8(string& utf8);
 size_t length_utf8(const string& str);
+void exec_file(string filename);
 
 int main() {
    // unbuffer output
@@ -159,12 +163,69 @@ int main() {
          if ((c == '\n') && (searchKey.length() == 0)) {
             // get index
             size_t i = fb->getIndex();
-            // fork exec
-            //int pid = fork();
-            // exec(files[i]);
+            int childpid = -1;
+            childpid = fork();
+            if (childpid == 0) {
+               // in child process
+               exec_file(files[i]);
+            } else if (childpid < 0) {
+               // error
+            } else if (childpid > 0) {
+               // in parent
+               wait(NULL);
+               // clear the screen
+               rt.clear();
+               // draw the corner labels
+               drawInterface();
+               // reset the cursor for the filebrowser
+               fb->setIndex(0);
+               // redraw the center panel
+               fb->redrawTable();
+            }
          } else if ((c == '\n') && (searchKey.length() > 0)) {
-            // validate filename,
-               // forkexec
+            // As per the original behavior of the TRS-80 Model 100,
+            // if the input is not the full name of a thing,
+            // clear buffer
+
+            // validate filename
+            int childpid = -1;
+            for (auto candidate : files) {
+               if (candidate.find(searchKey) == 0 && candidate.length() == searchKey.length()) {
+                  // fork exec
+                  childpid = fork();
+                  if (childpid == 0) {
+                     // in child process
+                     exec_file(searchKey);
+                  } else if (childpid < 0) {
+                     // error
+                  }
+                  break;
+               }
+            }
+
+            // check if found match
+            if (childpid > 0) {
+               // found match and in parent
+               wait(NULL);
+               // clear the screen
+               rt.clear();
+               // draw the corner labels
+               drawInterface();
+               // reset the cursor for the filebrowser
+               fb->setIndex(0);
+               // redraw the center panel
+               fb->redrawTable();
+               // clear the buffer
+               searchKey = "";
+            } else {
+               // there were no matches!
+               // visually clear the area where the buffer is
+               rt.moveCursor(rt.lines - 1, 8);
+               cout << setw(length_utf8(searchKey)) << "";
+               // clear the buffer
+               searchKey = "";
+            }
+               
          } else if ((c == '\t') && (searchKey.length() > 0)) {
             // scan for partial matches
             vector<string> autocompletes;
@@ -248,7 +309,7 @@ void drawInterface() {
    // Write disk usage (bottom right)
    rt.moveCursor(rt.lines - 1, rt.cols - 30);
    filesystem::space_info root = filesystem::space("/");
-   cout << setw(19) << root.available << " Bytes free";
+   cout << right << setw(19) << root.available << " Bytes free";
 }
 
 /**
@@ -318,4 +379,13 @@ void sigintHandler(int signum) {
    exit(signum);
 }
 
-
+void exec_file(string filename) {
+   // in child process
+   execlp("/usr/bin/vi", "/usr/bin/vi", filename.c_str());
+   // if reached, exec failed
+   rt.clear();
+   cout << "Failed to exec." << endl;
+   cout << "Press any key to continue...";
+   getch();
+   exit(-1);
+}
