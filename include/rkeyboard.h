@@ -90,13 +90,13 @@ int resolveEscapeSequence() {
       // f5     f6      f7      f8
       // f9     f10     rsrvd   enter
 
-      // vt100: (backspace as single character)
+      // vt100:
       "\x1BOA", "\x1BOB", "\x1BOC", "\x1BOD",
       "\x1BOP", "\x1BOQ", "\x1BOR", "\x1BOS",
       "\x1BOt", "\x1BOu", "\x1BOv", "\x1BOl",
       "\x1BOw", "\x1BOx", "", "\x1BOM",
 
-      // rxvt: (backspace as single character)
+      // rxvt:
       "\x1B[A", "\x1B[B", "\x1B[C", "\x1B[D",
       "\x1B[11~", "\x1B[12~", "\x1B[13~", "\x1B[14~",
       "\x1B[15~", "\x1B[17~", "\x1B[18~", "\x1B[19~",

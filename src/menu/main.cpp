@@ -88,8 +88,6 @@ void *workerForWriteDate(void *);
 bool sortAlphabetic(string one, string two);
 bool sortReverseAlphabetic(string one, string two);
 void sigintHandler(int signum);
-void pop_back_utf8(string& utf8);
-size_t length_utf8(const string& str);
 void exec_file(string filename);
 
 int main() {
@@ -378,6 +376,13 @@ bool sortReverseAlphabetic(string one, string two) {
    return one > two;
 }
 
+/**
+ * @function sigintHandler
+ * Handles SIGINT signal before exiting.
+ * Weirdly this hasn't resolved the issues I was facing on the Pi
+ * running in the Linux Framebuffer, but I think it resolved the
+ * issues in xterm.  Leaving as is for now.
+ */
 void sigintHandler(int signum) {
    // reset terminal
    rt.resetTerminal();
@@ -385,8 +390,18 @@ void sigintHandler(int signum) {
    exit(signum);
 }
 
+/**
+ * @function exec_file
+ * Finds a suitable executable for the provided file, or
+ * executes it directly.
+ * Handles failure by displaying message before yielding back
+ * to the parent process.
+ * @param {string} filename - the file
+ */
 void exec_file(string filename) {
    // in child process
+   // TODO: dynamically detect which way to run the file rather
+   // than blanketly using vim
    execlp("vi", "vi", ("./" + filename).c_str(), NULL);
    // if reached, exec failed
    rt.clear();
