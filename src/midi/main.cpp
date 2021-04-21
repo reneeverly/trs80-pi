@@ -167,7 +167,7 @@ int main(void) {
                cout << x.first << ":" << x.second << endl;
          } else if (resultant == KEY_F8) {
             // f8
-            ui.scrollDefault();
+            rt.resetTerminal();
             exit(0);
          }
       }

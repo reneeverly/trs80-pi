@@ -34,7 +34,6 @@ class FileBrowser {
       
    public:
       FileBrowser(rterm*, const vector<string>*);
-      ~FileBrowser();
 
       void redrawTable();
 
@@ -60,12 +59,6 @@ FileBrowser::FileBrowser(rterm* newrt, const vector<string>* newitems) {
    rt->changeScrollRegion(1, rt->lines - 2);
 
    redrawTable();
-}
-
-FileBrowser::~FileBrowser() {
-   rt->clear();
-   cout << "Resetting terminal scroll region...";
-   rt->changeScrollRegion(0, rt->lines - 1);
 }
 
 /**

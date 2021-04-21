@@ -38,6 +38,7 @@ class rterm {
       string sSaveCursor;
       string sRestoreCursor;
       string sChangeScroll;
+      string sResetTerminal;
       
       string ToHex(const string&, const bool); /* for debugging */
       string processUnescapedSequence(const string, const int, const int);
@@ -57,6 +58,7 @@ class rterm {
       void saveCursor();
       void restoreCursor();
       void changeScrollRegion(const int, const int);
+      void resetTerminal();
       
       string getReverse();
       string getResetAttributes();
@@ -89,6 +91,9 @@ rterm::rterm() {
 
    // Get the unescaped control sequence for changing the scroll region
    sChangeScroll = exec("tput csr");
+
+   // Get the control sequence for resetting the terminal
+   sResetTerminal = exec("tput reset");
    
    // Get the dimensions of the terminal
    updateDimensions();
@@ -243,6 +248,14 @@ void rterm::restoreCursor() {
  */
 void rterm::changeScrollRegion(const int firstline, const int lastline) {
    cout << processUnescapedSequence(sChangeScroll, firstline, lastline);
+}
+
+/**
+ * @method resetTerminal
+ * Resets the terminal to system defaults for all parameters.
+ */
+void rterm::resetTerminal() {
+   cout << sResetTerminal;
 }
 
 /**

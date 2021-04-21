@@ -312,8 +312,8 @@ bool sortReverseAlphabetic(string one, string two) {
 }
 
 void sigintHandler(int signum) {
-   // deconstruct FileBrowser (restore default terminal scroll)
-   delete fb;
+   // reset terminal
+   rt.resetTerminal();
 
    exit(signum);
 }
