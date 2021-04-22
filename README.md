@@ -1,7 +1,7 @@
 # trs80-pi
 A collection of scripts and programs designed to simulate the user experience of a TRS-80 Model 100 via Raspberry Pi.
 
-## Building
+## Building Applications
 
 Uses features of the C++17 standard, so GCC 7 or greater recommended.
 
@@ -10,4 +10,16 @@ GCC version 9.1 and lower require an additional flag `-lstdc++fs` which the make
 The following command builds all applications:
 ```
 make
+```
+
+## Installing Keyboard
+
+Install dependencies:
+```
+sudo pip3 install -r scripts/keyboard/requirements.txt
+```
+
+Then copy the script to /etc/rc.local:
+```
+sudo cp scripts/keyboard/keyboard.py /etc/rc/local/.
 ```

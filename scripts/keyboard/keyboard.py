@@ -35,6 +35,10 @@ ui = UInput(
    version = SCRIPTVERSION
 )
 
+# Set up notation for GPIO
+# Let's use board/device notation rather than GPIO notation.
+GPIO.setmode(GPIO.BOARD)
+
 # The keyboard eats up a lot of GPIO pins to the point that it leaves
 # some standard interfaces inaccessible.
 
