@@ -228,7 +228,7 @@ try:
             sleep_time = 1/5
 
 except KeyboardInterrupt:
-   loggin.info("Exiting on keyboard interrupt")
+   logging.info("Exiting on keyboard interrupt")
 
 except:
    logging.info("Exiting on unexpected exception")
