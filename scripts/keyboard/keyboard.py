@@ -192,34 +192,46 @@ for col in cols:
 
 
 # Polling loop
-pressed = set()
-sleep_time = 1/60
-polls_since_press = 0
 
-while True:
-   sleep(sleep_time)
-   syn = False
-   for i in range(len(rows)):
-      GPIO.output(rows[i], GPIO.HIGH)
-      for j in range(len(cols)):
-         keycode = i * (len(rows) + 1) + j
-         newval = GPIO.input(cols[j]) == GPIO.HIGH
-         if newval and not keycode in pressed:
-            pressed.add(keycode)
-            ui.write(e.EV_KEY, keymap_default[keycode], 1)
-            syn = True
-         elif not newval and keycode in pressed:
-            pressed.discard(keycode)
-            ui.write(e.EV_KEY, keymap_default[keycode], 0)
-            syn = True
-      if syn:
-         ui.syn()
-         polls_since_press = 0
-         sleep_time = 1/60
-      else:
-         polls_since_press += 1
+try:
 
-      if polls_since_press == 600:
-         sleep_time = 1/10
-      elif polls_since_press == 1200:
-         sleep_time = 1/5
+   pressed = set()
+   sleep_time = 1/60
+   polls_since_press = 0
+   
+   while True:
+      sleep(sleep_time)
+      syn = False
+      for i in range(len(rows)):
+         GPIO.output(rows[i], GPIO.HIGH)
+         for j in range(len(cols)):
+            keycode = i * (len(rows) + 1) + j
+            newval = GPIO.input(cols[j]) == GPIO.HIGH
+            if newval and not keycode in pressed:
+               pressed.add(keycode)
+               ui.write(e.EV_KEY, keymap_default[keycode], 1)
+               syn = True
+            elif not newval and keycode in pressed:
+               pressed.discard(keycode)
+               ui.write(e.EV_KEY, keymap_default[keycode], 0)
+               syn = True
+         if syn:
+            ui.syn()
+            polls_since_press = 0
+            sleep_time = 1/60
+         else:
+            polls_since_press += 1
+   
+         if polls_since_press == 600:
+            sleep_time = 1/10
+         elif polls_since_press == 1200:
+            sleep_time = 1/5
+
+except KeyboardInterrupt:
+   loggin.info("Exiting on keyboard interrupt")
+
+except:
+   logging.info("Exiting on unexpected exception")
+
+finally:
+   GPIO.cleanup()
