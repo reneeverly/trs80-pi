@@ -215,17 +215,18 @@ try:
                pressed.discard(keycode)
                ui.write(e.EV_KEY, keymap_default[keycode], 0)
                syn = True
-         if syn:
-            ui.syn()
-            polls_since_press = 0
-            sleep_time = 1/60
-         else:
-            polls_since_press += 1
+         GPIO.output(rows[i], GPIO.LOW)
+      if syn:
+         ui.syn()
+         polls_since_press = 0
+         sleep_time = 1/60
+      else:
+         polls_since_press += 1
    
-         if polls_since_press == 600:
-            sleep_time = 1/10
-         elif polls_since_press == 1200:
-            sleep_time = 1/5
+      if polls_since_press == 600:
+         sleep_time = 1/10
+      elif polls_since_press == 1200:
+         sleep_time = 1/5
 
 except KeyboardInterrupt:
    logging.info("Exiting on keyboard interrupt")
