@@ -12,7 +12,7 @@
 # unicode to work with tty, but also because they don't make that much sense
 # especially given how the "[" key works differently due to keymap.
 
-import TPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 from time import sleep
 from evdev import UInput, ecodes as e
 
