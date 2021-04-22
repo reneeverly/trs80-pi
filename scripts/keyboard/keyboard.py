@@ -15,6 +15,9 @@
 import RPi.GPIO as GPIO
 from time import sleep
 from evdev import UInput, ecodes as e
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Radio Shack has three vendor IDs for USB, let's use this one:
 # "RadioShack Corp. (Tandy)" https://devicehunt.com/view/type/usb/vendor/08B9
@@ -180,9 +183,11 @@ keymap_graph[NUMCOL*7 + 5] = e.KEY_BRIGHTNESSDOWN # experimental brightness down
 
 # Set up GPIO
 for row in rows:
+   logging.info(f"Setting pin {row} as an output")
    GPIO.setup(row, GPIO.OUT)
 
 for col in cols:
+   logging.info(f"Setting pin {col} as an input")
    GPIO.setup(col, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 
 
