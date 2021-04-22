@@ -183,7 +183,7 @@ for row in rows:
    GPIO.setup(row, GPIO.OUT)
 
 for col in cols:
-   GPIO.setup(col, GPIO.IN, pull_up_down = GPIO.PUD_down)
+   GPIO.setup(col, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 
 
 # Polling loop
