@@ -19,7 +19,23 @@ Install dependencies:
 sudo pip3 install -r scripts/keyboard/requirements.txt
 ```
 
-Then copy the script to /etc/rc.local:
+Edit line 60 of keyboard.py and select your preferred pin layout.
+There are four layouts which each make sure certain pins are left open
+depending upon what other things you'd like to use GPIO for.
+```python
+# Layout 1 leaves SPI0 open
+#       (device pins 19, 21, 23, 24, 26 or GPIO 10, 9, 11, 8, 7)
+# Layout 2 leaves 1-Wire open (Belsamber's original layout)
+#       (device pin 7, or GPIO 4)
+# Layout 3 leaves PCM and 1-Wire open
+#       (device pins 7, 12, 35, 38, 40 or GPIO 4, 18, 19, 20, 21)
+# Layout 4 leaves JTAG Alt5 open
+#       (device pins 7, 29, 31, 32, 33 or GPIO 4, 5, 6, 12, 13)
+
+USE_PINLAYOUT = 1 # default
 ```
-sudo cp scripts/keyboard/keyboard.py /etc/rc/local/.
+
+Then edit /etc/rc.local, adding a call for the keyboard script:
+```
+/path/to/trs80-pi/scripts/keyboard/keyboard.py
 ```
