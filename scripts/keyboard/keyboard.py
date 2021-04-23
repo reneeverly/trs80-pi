@@ -155,8 +155,8 @@ INDEX_GRAPHKEY = NUMCOL * 2 + 8
 #       row 4, col 6:   [PASTE] set to KEY_F9
 #       row 5, col 6:   [LABEL] set to KEY_F10
 #       row 6, col 6:   [PRINT] set to KEY_SYSRQ
-#       row 5, col 8:   [NUM]   set to KEY_RESERVED
-INDEX_NUMLOCK = NUMCOL * 5 + 8
+#       row 4, col 8:   [NUM]   set to KEY_RESERVED
+INDEX_NUMLOCK = NUMCOL * 4 + 8
 
 # Default Keymap
 keymap_default = [
