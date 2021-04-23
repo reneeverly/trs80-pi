@@ -148,35 +148,45 @@ elif USE_PINLAYOUT == 4:
 NUMCOL = 9
 
 
-# Default keymap (w/ debug A,B,C,D,E,F)
+# Non-standard keys:
+#       row 2, col 8:   [GRPH]  set to KEY_B
+INDEX_GRAPHKEY = NUMCOL * 2 + 8
+#       row 3, col 8:   [CODE]  set to KEY_COMPOSE
+#       row 4, col 6:   [PASTE] set to KEY_F9
+#       row 5, col 6:   [LABEL] set to KEY_F10
+#       row 6, col 6:   [PRINT] set to KEY_SYSRQ
+#       row 5, col 8:   [NUM]   set to KEY_RESERVED
+INDEX_NUMLOCK = NUMCOL * 5 + 8
+
+# Default Keymap
 keymap_default = [
    e.KEY_Z, e.KEY_A, e.KEY_Q, e.KEY_O,          e.KEY_1, e.KEY_9,     e.KEY_SPACE,     e.KEY_F1, e.KEY_LEFTSHIFT,
-   e.KEY_X, e.KEY_S, e.KEY_W, e.KEY_P,          e.KEY_2, e.KEY_0,     e.KEY_E,         e.KEY_F2, e.KEY_LEFTCTRL,
+   e.KEY_X, e.KEY_S, e.KEY_W, e.KEY_P,          e.KEY_2, e.KEY_0,     e.KEY_BACKSPACE, e.KEY_F2, e.KEY_LEFTCTRL,
    e.KEY_C, e.KEY_D, e.KEY_E, e.KEY_LEFTBRACE,  e.KEY_3, e.KEY_MINUS, e.KEY_TAB,       e.KEY_F3, e.KEY_B,
-   e.KEY_V, e.KEY_F, e.KEY_R, e.KEY_SEMICOLON,  e.KEY_4, e.KEY_EQUAL, e.KEY_ESC,       e.KEY_F4, e.KEY_C,
-   e.KEY_B, e.KEY_G, e.KEY_T, e.KEY_APOSTROPHE, e.KEY_5, e.KEY_LEFT,  e.KEY_F,         e.KEY_F5, e.KEY_NUMLOCK,
-   e.KEY_N, e.KEY_H, e.KEY_Y, e.KEY_COMMA,      e.KEY_6, e.KEY_RIGHT, e.KEY_D,         e.KEY_F6, e.KEY_CAPSLOCK,
-   e.KEY_M, e.KEY_J, e.KEY_U, e.KEY_DOT,        e.KEY_7, e.KEY_UP,    e.KEY_A,         e.KEY_F7, e.KEY_RESERVED,
+   e.KEY_V, e.KEY_F, e.KEY_R, e.KEY_SEMICOLON,  e.KEY_4, e.KEY_EQUAL, e.KEY_ESC,       e.KEY_F4, e.KEY_COMPOSE,
+   e.KEY_B, e.KEY_G, e.KEY_T, e.KEY_APOSTROPHE, e.KEY_5, e.KEY_LEFT,  e.KEY_F9,        e.KEY_F5, e.KEY_RESERVED,
+   e.KEY_N, e.KEY_H, e.KEY_Y, e.KEY_COMMA,      e.KEY_6, e.KEY_RIGHT, e.KEY_F10,       e.KEY_F6, e.KEY_CAPSLOCK,
+   e.KEY_M, e.KEY_J, e.KEY_U, e.KEY_DOT,        e.KEY_7, e.KEY_UP,    e.KEY_SYSRQ,     e.KEY_F7, e.KEY_RESERVED,
    e.KEY_L, e.KEY_K, e.KEY_I, e.KEY_SLASH,      e.KEY_8, e.KEY_DOWN,  e.KEY_ENTER,     e.KEY_F8, e.KEY_PAUSE,
 ]
 
-# numlock keymap
+# Numlock Keymap
 keymap_numlock = keymap_default[:]
-keymap_numlock[NUMCOL*6 + 2] = e.KEY_4 # U -> 4
-keymap_numlock[NUMCOL*7 + 2] = e.KEY_5 # I -> 5
+keymap_numlock[NUMCOL * 6 + 2] = e.KEY_4 # U -> 4
+keymap_numlock[NUMCOL * 7 + 2] = e.KEY_5 # I -> 5
 keymap_numlock[3] = e.KEY_6 # O -> 6
-keymap_numlock[NUMCOL*6 + 1] = e.KEY_1 # J -> 1
-keymap_numlock[NUMCOL*7 + 1] = e.KEY_2 # K -> 2
-keymap_numlock[NUMCOL*7] = e.KEY_3 # L -> 3
-keymap_numlock[NUMCOL*6] = e.KEY_0 # M -> 0
+keymap_numlock[NUMCOL * 6 + 1] = e.KEY_1 # J -> 1
+keymap_numlock[NUMCOL * 7 + 1] = e.KEY_2 # K -> 2
+keymap_numlock[NUMCOL * 7] = e.KEY_3 # L -> 3
+keymap_numlock[NUMCOL * 6] = e.KEY_0 # M -> 0
 
-# graph keymap
+# {currently unused} graph keymap
 keymap_graph = keymap_default[:]
-keymap_graph[NUMCOL*2 + 3] = e.KEY_RIGHTBRACE # [ to ] and { to }
-keymap_graph[NUMCOL*3 + 6] = e.KEY_GRAVE # [GRPH][ESC] to ` and [GRPH][SHIFT][ESC] to ~
-keymap_graph[NUMCOL*7 + 6] = e.KEY_BACKSLASH # [GRPH][ENTER] to \ and [GRPH][SHIFT][ENTER] to |
-keymap_graph[NUMCOL*6 + 5] = e.KEY_BRIGHTNESSUP # experimental brightness up
-keymap_graph[NUMCOL*7 + 5] = e.KEY_BRIGHTNESSDOWN # experimental brightness down
+keymap_graph[NUMCOL * 2 + 3] = e.KEY_RIGHTBRACE # [ to ] and { to }
+keymap_graph[NUMCOL * 3 + 6] = e.KEY_GRAVE # [GRPH][ESC] to ` and [GRPH][SHIFT][ESC] to ~
+keymap_graph[NUMCOL * 7 + 6] = e.KEY_BACKSLASH # [GRPH][ENTER] to \ and [GRPH][SHIFT][ENTER] to |
+keymap_graph[NUMCOL * 6 + 5] = e.KEY_BRIGHTNESSUP # experimental brightness up
+keymap_graph[NUMCOL * 7 + 5] = e.KEY_BRIGHTNESSDOWN # experimental brightness down
 
 # We'll just map [CODE] to [COMPOSE] for now so that we have a way to type diacritics.
 
@@ -209,11 +219,17 @@ try:
             newval = GPIO.input(cols[j]) == GPIO.HIGH
             if newval and not keycode in pressed:
                pressed.add(keycode)
-               ui.write(e.EV_KEY, keymap_default[keycode], 1)
+               if INDEX_NUMLOCK in pressed:
+                  ui.write(e.EV_KEY, keymap_numlock[keycode], 1)
+               else:
+                  ui.write(e.EV_KEY, keymap_default[keycode], 1)
                syn = True
             elif not newval and keycode in pressed:
                pressed.discard(keycode)
-               ui.write(e.EV_KEY, keymap_default[keycode], 0)
+               if INDEX_NUMLOCK in pressed:
+                  ui.write(e.EV_KEY, keymap_numlock[keycode], 0)
+               else:
+                  ui.write(e.EV_KEY, keymap_default[keycode], 0)
                syn = True
          GPIO.output(rows[i], GPIO.LOW)
       if syn:
@@ -223,9 +239,9 @@ try:
       else:
          polls_since_press += 1
    
-      if polls_since_press == 600:
+      if polls_since_press == 600: # 10 seconds
          sleep_time = 1/10
-      elif polls_since_press == 1200:
+      elif polls_since_press == 1200: # 120 seconds after 10 seconds
          sleep_time = 1/5
 
 except KeyboardInterrupt:
