@@ -149,20 +149,27 @@ NUMCOL = 9
 
 
 # Non-standard keys:
-#       row 2, col 8:   [GRPH]  set to KEY_B
+#       row 2, col 8:   [GRPH]  set to KEY_RESERVED
 INDEX_GRAPHKEY = NUMCOL * 2 + 8
 #       row 3, col 8:   [CODE]  set to KEY_COMPOSE
 #       row 4, col 6:   [PASTE] set to KEY_F9
-#       row 5, col 6:   [LABEL] set to KEY_F10
-#       row 6, col 6:   [PRINT] set to KEY_SYSRQ
 #       row 4, col 8:   [NUM]   set to KEY_RESERVED
 INDEX_NUMLOCK = NUMCOL * 4 + 8
+#       row 5, col 6:   [LABEL] set to KEY_F10
+#       row 5, col 8:   [CAPS]  set to KEY_CAPSLOCK
+INDEX_CAPSLOCK = NUMCOL * 5 + 8
+#       row 6, col 6:   [PRINT] set to KEY_SYSRQ
+#       row 6, col 8:   This key does not exist. (KEY_RESERVED)
+
+# Standard Keys: (Which we'd like to know the location of)
+#       row 0, col 8:   [SHIFT] set to KEY_LEFTSHIFT
+INDEX_LEFTSHIFT = NUMCOL * 0 + 8
 
 # Default Keymap
 keymap_default = [
    e.KEY_Z, e.KEY_A, e.KEY_Q, e.KEY_O,          e.KEY_1, e.KEY_9,     e.KEY_SPACE,     e.KEY_F1, e.KEY_LEFTSHIFT,
    e.KEY_X, e.KEY_S, e.KEY_W, e.KEY_P,          e.KEY_2, e.KEY_0,     e.KEY_BACKSPACE, e.KEY_F2, e.KEY_LEFTCTRL,
-   e.KEY_C, e.KEY_D, e.KEY_E, e.KEY_LEFTBRACE,  e.KEY_3, e.KEY_MINUS, e.KEY_TAB,       e.KEY_F3, e.KEY_B,
+   e.KEY_C, e.KEY_D, e.KEY_E, e.KEY_LEFTBRACE,  e.KEY_3, e.KEY_MINUS, e.KEY_TAB,       e.KEY_F3, e.KEY_RESERVED,
    e.KEY_V, e.KEY_F, e.KEY_R, e.KEY_SEMICOLON,  e.KEY_4, e.KEY_EQUAL, e.KEY_ESC,       e.KEY_F4, e.KEY_COMPOSE,
    e.KEY_B, e.KEY_G, e.KEY_T, e.KEY_APOSTROPHE, e.KEY_5, e.KEY_LEFT,  e.KEY_F9,        e.KEY_F5, e.KEY_RESERVED,
    e.KEY_N, e.KEY_H, e.KEY_Y, e.KEY_COMMA,      e.KEY_6, e.KEY_RIGHT, e.KEY_F10,       e.KEY_F6, e.KEY_CAPSLOCK,
@@ -189,6 +196,14 @@ keymap_graph[NUMCOL * 6 + 5] = e.KEY_BRIGHTNESSUP # experimental brightness up
 keymap_graph[NUMCOL * 7 + 5] = e.KEY_BRIGHTNESSDOWN # experimental brightness down
 
 # We'll just map [CODE] to [COMPOSE] for now so that we have a way to type diacritics.
+# Also, note that the compose layer is editable, and supports UTF-8 sequences with recent kernels.
+
+# Keymap resolver
+def resolveKeymap():
+   if INDEX_NUMLOCK in pressed:
+      return keymap_numlock
+   else
+      return keymap_default
 
 
 # Set up GPIO
@@ -219,17 +234,24 @@ try:
             newval = GPIO.input(cols[j]) == GPIO.HIGH
             if newval and not keycode in pressed:
                pressed.add(keycode)
-               if INDEX_NUMLOCK in pressed:
-                  ui.write(e.EV_KEY, keymap_numlock[keycode], 1)
-               else:
-                  ui.write(e.EV_KEY, keymap_default[keycode], 1)
+
+               # Turn on the key
+               ui.write(e.EV_KEY, resolveKeymap()[keycode], 1)
+
+               # If capslock, immediately turn it back off
+               if keycode == INDEX_CAPSLOCK:
+                  ui.write(e.EV_KEY, resolveKeymap()[keycode], 0)
+
                syn = True
             elif not newval and keycode in pressed:
                pressed.discard(keycode)
-               if INDEX_NUMLOCK in pressed:
-                  ui.write(e.EV_KEY, keymap_numlock[keycode], 0)
-               else:
-                  ui.write(e.EV_KEY, keymap_default[keycode], 0)
+               # If capslock, turn it back on temporarily
+               if keycode == INDEX_CAPSLOCK:
+                  ui.write(e.EV_KEY, resolveKeymap()[keycode], 1)
+
+               # Turn off the key
+               ui.write(e.EV_KEY, resolveKeymap()[keycode], 0)
+
                syn = True
          GPIO.output(rows[i], GPIO.LOW)
       if syn:
