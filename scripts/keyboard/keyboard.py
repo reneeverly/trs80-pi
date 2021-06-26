@@ -16,6 +16,7 @@ import RPi.GPIO as GPIO
 from time import sleep
 from evdev import UInput, ecodes as e
 import logging
+import copy
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -167,41 +168,62 @@ INDEX_LEFTSHIFT = NUMCOL * 0 + 8
 
 # Default Keymap
 keymap_default = [
-   e.KEY_Z, e.KEY_A, e.KEY_Q, e.KEY_O,          e.KEY_1, e.KEY_9,     e.KEY_SPACE,     e.KEY_F1, e.KEY_LEFTSHIFT,
-   e.KEY_X, e.KEY_S, e.KEY_W, e.KEY_P,          e.KEY_2, e.KEY_0,     e.KEY_BACKSPACE, e.KEY_F2, e.KEY_LEFTCTRL,
-   e.KEY_C, e.KEY_D, e.KEY_E, e.KEY_LEFTBRACE,  e.KEY_3, e.KEY_MINUS, e.KEY_TAB,       e.KEY_F3, e.KEY_RESERVED,
-   e.KEY_V, e.KEY_F, e.KEY_R, e.KEY_SEMICOLON,  e.KEY_4, e.KEY_EQUAL, e.KEY_ESC,       e.KEY_F4, e.KEY_COMPOSE,
-   e.KEY_B, e.KEY_G, e.KEY_T, e.KEY_APOSTROPHE, e.KEY_5, e.KEY_LEFT,  e.KEY_F9,        e.KEY_F5, e.KEY_RESERVED,
-   e.KEY_N, e.KEY_H, e.KEY_Y, e.KEY_COMMA,      e.KEY_6, e.KEY_RIGHT, e.KEY_F10,       e.KEY_F6, e.KEY_CAPSLOCK,
-   e.KEY_M, e.KEY_J, e.KEY_U, e.KEY_DOT,        e.KEY_7, e.KEY_UP,    e.KEY_SYSRQ,     e.KEY_F7, e.KEY_RESERVED,
-   e.KEY_L, e.KEY_K, e.KEY_I, e.KEY_SLASH,      e.KEY_8, e.KEY_DOWN,  e.KEY_ENTER,     e.KEY_F8, e.KEY_PAUSE,
+   [e.KEY_Z],[e.KEY_A],[e.KEY_Q],[e.KEY_O],       [e.KEY_1],[e.KEY_9],   [e.KEY_SPACE],  [e.KEY_F1],[e.KEY_LEFTSHIFT],
+   [e.KEY_X],[e.KEY_S],[e.KEY_W],[e.KEY_P],       [e.KEY_2],[e.KEY_0],  [e.KEY_BACKSPACE],[e.KEY_F2],[e.KEY_LEFTCTRL],
+   [e.KEY_C],[e.KEY_D],[e.KEY_E],[e.KEY_LEFTBRACE],[e.KEY_3],[e.KEY_MINUS],[e.KEY_TAB],   [e.KEY_F3],[e.KEY_RESERVED],
+   [e.KEY_V],[e.KEY_F],[e.KEY_R],[e.KEY_SEMICOLON],[e.KEY_4],[e.KEY_EQUAL],[e.KEY_ESC],   [e.KEY_F4],[e.KEY_COMPOSE],
+   [e.KEY_B],[e.KEY_G],[e.KEY_T],[e.KEY_APOSTROPHE],[e.KEY_5],[e.KEY_LEFT],[e.KEY_F9],    [e.KEY_F5],[e.KEY_RESERVED],
+   [e.KEY_N],[e.KEY_H],[e.KEY_Y],[e.KEY_COMMA],   [e.KEY_6],[e.KEY_RIGHT],[e.KEY_F10],    [e.KEY_F6],[e.KEY_CAPSLOCK],
+   [e.KEY_M],[e.KEY_J],[e.KEY_U],[e.KEY_DOT],     [e.KEY_7],[e.KEY_UP],   [e.KEY_SYSRQ],  [e.KEY_F7],[e.KEY_RESERVED],
+   [e.KEY_L],[e.KEY_K],[e.KEY_I],[e.KEY_SLASH],   [e.KEY_8],[e.KEY_DOWN], [e.KEY_ENTER],  [e.KEY_F8],[e.KEY_PAUSE],
 ]
 
+# Shift key behavior for specific keys
+SHIFT_DEFAULT = 0 # When shift key is pressed, key will be shifted
+SHIFT_ALWAYS = 1 # Regardless of shift key, key will always be shifted
+SHIFT_NEVER = -1 # Regardless of shift key, key will never be shifted
+
+# Set default keymap shift behavior to default
+for key in keymap_default:
+   key[1] = SHIFT_DEFAULT
+
 # Numlock Keymap
-keymap_numlock = keymap_default[:]
-keymap_numlock[NUMCOL * 6 + 2] = e.KEY_4 # U -> 4
-keymap_numlock[NUMCOL * 7 + 2] = e.KEY_5 # I -> 5
-keymap_numlock[3] = e.KEY_6 # O -> 6
-keymap_numlock[NUMCOL * 6 + 1] = e.KEY_1 # J -> 1
-keymap_numlock[NUMCOL * 7 + 1] = e.KEY_2 # K -> 2
-keymap_numlock[NUMCOL * 7] = e.KEY_3 # L -> 3
-keymap_numlock[NUMCOL * 6] = e.KEY_0 # M -> 0
+keymap_numlock = copy.deepcopy(keymap_default)
+keymap_numlock[NUMCOL * 6 + 2] = [e.KEY_4, SHIFT_NEVER] # U -> 4
+keymap_numlock[NUMCOL * 7 + 2] = [e.KEY_5, SHIFT_NEVER] # I -> 5
+keymap_numlock[3][0] = [e.KEY_6, SHIFT_NEVER] # O -> 6
+keymap_numlock[NUMCOL * 6 + 1] = [e.KEY_1, SHIFT_NEVER] # J -> 1
+keymap_numlock[NUMCOL * 7 + 1] = [e.KEY_2, SHIFT_NEVER] # K -> 2
+keymap_numlock[NUMCOL * 7] = [e.KEY_3, SHIFT_NEVER] # L -> 3
+keymap_numlock[NUMCOL * 6] = [e.KEY_0, SHIFT_NEVER] # M -> 0
+
+# shiftfix keymap
+keymap_shiftfix = copy.deepcopy(keymap_default)
+keymap_shiftfix[NUMCOL * 2 + 3] = [e.KEY_RIGHTBRACE, SHIFT_NEVER] # shift of "[" is "]"
+
+# shiftfix at the same time as numlock
+keymap_shiftnum = copy.deepcopy(keymap_numlock)
+keymap_shiftnum[NUMCOL * 2 + 3] = [e.KEY_RIGHTBRACE, SHIFT_NEVER] # shift of "[" is "]"
 
 # {currently unused} graph keymap
-keymap_graph = keymap_default[:]
-keymap_graph[NUMCOL * 2 + 3] = e.KEY_RIGHTBRACE # [ to ] and { to }
-keymap_graph[NUMCOL * 3 + 6] = e.KEY_GRAVE # [GRPH][ESC] to ` and [GRPH][SHIFT][ESC] to ~
-keymap_graph[NUMCOL * 7 + 6] = e.KEY_BACKSLASH # [GRPH][ENTER] to \ and [GRPH][SHIFT][ENTER] to |
-keymap_graph[NUMCOL * 6 + 5] = e.KEY_BRIGHTNESSUP # experimental brightness up
-keymap_graph[NUMCOL * 7 + 5] = e.KEY_BRIGHTNESSDOWN # experimental brightness down
+keymap_graph = copy.deepcopy(keymap_default)
+keymap_graph[NUMCOL * 2 + 3][0] = e.KEY_RIGHTBRACE # [ to ] and { to }
+keymap_graph[NUMCOL * 3 + 6][0] = e.KEY_GRAVE # [GRPH][ESC] to ` and [GRPH][SHIFT][ESC] to ~
+keymap_graph[NUMCOL * 7 + 6][0] = e.KEY_BACKSLASH # [GRPH][ENTER] to \ and [GRPH][SHIFT][ENTER] to |
+keymap_graph[NUMCOL * 6 + 5][0] = e.KEY_BRIGHTNESSUP # experimental brightness up
+keymap_graph[NUMCOL * 7 + 5][0] = e.KEY_BRIGHTNESSDOWN # experimental brightness down
 
 # We'll just map [CODE] to [COMPOSE] for now so that we have a way to type diacritics.
 # Also, note that the compose layer is editable, and supports UTF-8 sequences with recent kernels.
 
 # Keymap resolver
 def resolveKeymap():
-   if INDEX_NUMLOCK in pressed:
+   if INDEX_NUMLOCK in pressed and not INDEX_LEFTSHIFT in pressed:
       return keymap_numlock
+   elif INDEX_NUMLOCK in pressed and INDEX_LEFTSHIFT in pressed:
+      return keymap_shiftnum
+   elif not INDEX_NUMLOCK in pressed and INDEX_LEFTSHIFT in pressed:
+      return keymap_shiftfix
    else:
       return keymap_default
 
@@ -237,12 +259,18 @@ try:
                # The key is being pressed for the first time
                pressed.add(keycode)
 
+               # check for shift behavior
+               if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
+                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
+               elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
+                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
+
                # Turn on the key
-               ui.write(e.EV_KEY, resolveKeymap()[keycode], 1)
+               ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 1)
 
                # If capslock, immediately turn it back off
                if keycode == INDEX_CAPSLOCK:
-                  ui.write(e.EV_KEY, resolveKeymap()[keycode], 0)
+                  ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 0)
 
                syn = True
             elif newval and keycode in pressed and not keycode in repeated and polls_since_press == 30:
@@ -251,24 +279,31 @@ try:
                # unless capslock, trigger typematic
                if keycode != INDEX_CAPSLOCK:
                   repeated.add(keycode)
-                  ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
+                  ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 2)
                
                   syn = True
             elif newval and keycode in pressed and keycode in repeated and polls_since_press == 5:
                # typematic is enabled for this key on 5/60 second delay
-               ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
+               ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 2)
 
                syn = True
             elif not newval and keycode in pressed:
                # the key is being released
                pressed.discard(keycode)
                repeated.discard(keycode)
+
+               # check for shift behavior
+               if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
+                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
+               elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
+                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
+
                # If capslock, turn it back on temporarily
                if keycode == INDEX_CAPSLOCK:
-                  ui.write(e.EV_KEY, resolveKeymap()[keycode], 1)
+                  ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 1)
 
                # Turn off the key
-               ui.write(e.EV_KEY, resolveKeymap()[keycode], 0)
+               ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 0)
 
                syn = True
          GPIO.output(rows[i], GPIO.LOW)
