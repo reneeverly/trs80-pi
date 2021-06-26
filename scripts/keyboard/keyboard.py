@@ -217,7 +217,7 @@ def addGraph(keymap):
 
 # shiftfix at the same time as graph
 def addGraphshift(keymap):
-   keymap_shiftgraph[NUMCOL * 2 + 3] = [e.KEY_RIGHTBRACE, SHIFT_ALWAYS] # ] to }
+   keymap[NUMCOL * 2 + 3] = [e.KEY_RIGHTBRACE, SHIFT_ALWAYS] # ] to }
 
 # --
 # Generate keymaps
