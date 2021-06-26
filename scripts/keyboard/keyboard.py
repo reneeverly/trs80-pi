@@ -221,7 +221,6 @@ for col in cols:
 try:
 
    pressed = set()
-   repeated = set()
    sleep_time = 1/60
    polls_since_press = 0
    
@@ -245,15 +244,14 @@ try:
                   ui.write(e.EV_KEY, resolveKeymap()[keycode], 0)
 
                syn = True
-            elif newval and keycode in pressed and not keycode in repeated:
-               # the key is still pressed
+            elif newval and keycode in pressed and polls_since_press == 60:
+               # the key is still pressed, signal typematic
                repeated.add(keycode)
                if keycode != INDEX_CAPSLOCK:
                   ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
             elif not newval and keycode in pressed:
                # the key is being released
                pressed.discard(keycode)
-               repeated.discard(keycode)
                # If capslock, turn it back on temporarily
                if keycode == INDEX_CAPSLOCK:
                   ui.write(e.EV_KEY, resolveKeymap()[keycode], 1)
