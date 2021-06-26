@@ -167,7 +167,7 @@ INDEX_CAPSLOCK = NUMCOL * 5 + 8
 INDEX_LEFTSHIFT = NUMCOL * 0 + 8
 
 # Default Keymap
-keymap_default = [
+keymaps = [[
    [e.KEY_Z],[e.KEY_A],[e.KEY_Q],[e.KEY_O],       [e.KEY_1],[e.KEY_9],   [e.KEY_SPACE],  [e.KEY_F1],[e.KEY_LEFTSHIFT],
    [e.KEY_X],[e.KEY_S],[e.KEY_W],[e.KEY_P],       [e.KEY_2],[e.KEY_0],  [e.KEY_BACKSPACE],[e.KEY_F2],[e.KEY_LEFTCTRL],
    [e.KEY_C],[e.KEY_D],[e.KEY_E],[e.KEY_LEFTBRACE],[e.KEY_3],[e.KEY_MINUS],[e.KEY_TAB],   [e.KEY_F3],[e.KEY_RESERVED],
@@ -176,7 +176,7 @@ keymap_default = [
    [e.KEY_N],[e.KEY_H],[e.KEY_Y],[e.KEY_COMMA],   [e.KEY_6],[e.KEY_RIGHT],[e.KEY_F10],    [e.KEY_F6],[e.KEY_CAPSLOCK],
    [e.KEY_M],[e.KEY_J],[e.KEY_U],[e.KEY_DOT],     [e.KEY_7],[e.KEY_UP],   [e.KEY_SYSRQ],  [e.KEY_F7],[e.KEY_RESERVED],
    [e.KEY_L],[e.KEY_K],[e.KEY_I],[e.KEY_SLASH],   [e.KEY_8],[e.KEY_DOWN], [e.KEY_ENTER],  [e.KEY_F8],[e.KEY_PAUSE],
-]
+]]
 
 # Shift key behavior for specific keys
 SHIFT_DEFAULT = 0 # When shift key is pressed, key will be shifted
@@ -184,49 +184,83 @@ SHIFT_ALWAYS = 1 # Regardless of shift key, key will always be shifted
 SHIFT_NEVER = -1 # Regardless of shift key, key will never be shifted
 
 # Set default keymap shift behavior to default
-for key in keymap_default:
+for key in keymaps[0]:
    key.extend([SHIFT_DEFAULT])
 
+# --
+# Keymap generators
+# --
+
 # Numlock Keymap
-keymap_numlock = copy.deepcopy(keymap_default)
-keymap_numlock[NUMCOL * 6 + 2] = [e.KEY_4, SHIFT_NEVER] # U -> 4
-keymap_numlock[NUMCOL * 7 + 2] = [e.KEY_5, SHIFT_NEVER] # I -> 5
-keymap_numlock[3] = [e.KEY_6, SHIFT_NEVER] # O -> 6
-keymap_numlock[NUMCOL * 6 + 1] = [e.KEY_1, SHIFT_NEVER] # J -> 1
-keymap_numlock[NUMCOL * 7 + 1] = [e.KEY_2, SHIFT_NEVER] # K -> 2
-keymap_numlock[NUMCOL * 7] = [e.KEY_3, SHIFT_NEVER] # L -> 3
-keymap_numlock[NUMCOL * 6] = [e.KEY_0, SHIFT_NEVER] # M -> 0
+def addNumpad(keymap):
+   keymap[NUMCOL * 6 + 2] = [e.KEY_4, SHIFT_NEVER] # U -> 4
+   keymap[NUMCOL * 7 + 2] = [e.KEY_5, SHIFT_NEVER] # I -> 5
+   keymap[3] = [e.KEY_6, SHIFT_NEVER] # O -> 6
+   keymap[NUMCOL * 6 + 1] = [e.KEY_1, SHIFT_NEVER] # J -> 1
+   keymap[NUMCOL * 7 + 1] = [e.KEY_2, SHIFT_NEVER] # K -> 2
+   keymap[NUMCOL * 7] = [e.KEY_3, SHIFT_NEVER] # L -> 3
+   keymap[NUMCOL * 6] = [e.KEY_0, SHIFT_NEVER] # M -> 0
 
 # shiftfix keymap
-keymap_shiftfix = copy.deepcopy(keymap_default)
-keymap_shiftfix[NUMCOL * 2 + 3] = [e.KEY_RIGHTBRACE, SHIFT_NEVER] # shift of "[" is "]"
+def addShift(keymap):
+   keymap[NUMCOL * 2 + 3] = [e.KEY_RIGHTBRACE, SHIFT_NEVER] # shift of "[" is "]"
 
-# shiftfix at the same time as numlock
-keymap_shiftnum = copy.deepcopy(keymap_numlock)
-keymap_shiftnum[NUMCOL * 2 + 3] = [e.KEY_RIGHTBRACE, SHIFT_NEVER] # shift of "[" is "]"
+# graph keymap
+def addGraph(keymap):
+   keymap[NUMCOL * 2 + 3] = [e.KEY_LEFTBRACE, SHIFT_ALWAYS] # [ to {
+   keymap[NUMCOL * 3 + 6][0] = e.KEY_GRAVE # [GRPH][ESC] to ` and [GRPH][SHIFT][ESC] to ~
+   keymap[NUMCOL * 7 + 6][0] = e.KEY_BACKSLASH # [GRPH][ENTER] to \ and [GRPH][SHIFT][ENTER] to |
+   keymap[NUMCOL * 6 + 5][0] = e.KEY_BRIGHTNESSUP # experimental brightness up
+   keymap[NUMCOL * 7 + 5][0] = e.KEY_BRIGHTNESSDOWN # experimental brightness down
+   # the "." key on my TRS is broken, so here's a map of [GRPH][,] to .
+   keymap[NUMCOL * 5 + 3][0] = e.KEY_DOT
 
-# {currently unused} graph keymap
-keymap_graph = copy.deepcopy(keymap_default)
-keymap_graph[NUMCOL * 2 + 3][0] = e.KEY_RIGHTBRACE # [ to ] and { to }
-keymap_graph[NUMCOL * 3 + 6][0] = e.KEY_GRAVE # [GRPH][ESC] to ` and [GRPH][SHIFT][ESC] to ~
-keymap_graph[NUMCOL * 7 + 6][0] = e.KEY_BACKSLASH # [GRPH][ENTER] to \ and [GRPH][SHIFT][ENTER] to |
-keymap_graph[NUMCOL * 6 + 5][0] = e.KEY_BRIGHTNESSUP # experimental brightness up
-keymap_graph[NUMCOL * 7 + 5][0] = e.KEY_BRIGHTNESSDOWN # experimental brightness down
+# shiftfix at the same time as graph
+def addGraphshift(keymap):
+   keymap_shiftgraph[NUMCOL * 2 + 3] = [e.KEY_RIGHTBRACE, SHIFT_ALWAYS] # ] to }
 
-# We'll just map [CODE] to [COMPOSE] for now so that we have a way to type diacritics.
-# Also, note that the compose layer is editable, and supports UTF-8 sequences with recent kernels.
+# --
+# Generate keymaps
+# --
 
 # Keymap resolver
 def resolveKeymap():
-   if INDEX_NUMLOCK in pressed and not INDEX_LEFTSHIFT in pressed:
-      return keymap_numlock
-   elif INDEX_NUMLOCK in pressed and INDEX_LEFTSHIFT in pressed:
-      return keymap_shiftnum
-   elif not INDEX_NUMLOCK in pressed and INDEX_LEFTSHIFT in pressed:
-      return keymap_shiftfix
-   else:
-      return keymap_default
+   return keymaps[
+      (1, 0) [INDEX_NUMLOCK in pressed]
+      + (2, 0) [INDEX_LEFTSHIFT in pressed]
+      + (4, 0) [INDEX_GRAPH in pressed]
+   ]
 
+keymaps.extend([None] * 6)
+
+keymap[1] = copy.deepcopy(keymaps[0])
+addNumpad(keymaps[1])
+
+keymaps[2] = copy.deepcopy(keymaps[0])
+addShift(keymaps[2])
+
+keymaps[3] = copy.deepcopy(keymaps[0])
+addNumpad(keymaps[3])
+addShift(keymaps[3])
+
+keymaps[4] = copy.deepcopy(keymaps[0])
+addGraph(keymaps[4])
+
+keymaps[5] = copy.deepcopy(keymaps[0])
+addGraph(keymaps[5])
+addNumpad(keymaps[5])
+
+keymaps[6] = copy.deepcopy(keymaps[0])
+addGraph(keymaps[6])
+addGraphshift(keymaps[6])
+
+keymaps[7] = copy.deepcopy(keymaps[0])
+addGraph(keymaps[7])
+addGraphshift(keymaps[7])
+addNumpad(keymaps[7])
+
+# We'll just map [CODE] to [COMPOSE] for now so that we have a way to type diacritics.
+# Also, note that the compose layer is editable, and supports UTF-8 sequences with recent kernels.
 
 # Set up GPIO
 for row in rows:
