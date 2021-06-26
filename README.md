@@ -1,7 +1,7 @@
 # trs80-pi
 A collection of scripts and programs designed to simulate the user experience of a TRS-80 Model 100 via Raspberry Pi.
 
-## Building
+## Building Applications
 
 Uses features of the C++17 standard, so GCC 7 or greater recommended.
 
@@ -10,4 +10,32 @@ GCC version 9.1 and lower require an additional flag `-lstdc++fs` which the make
 The following command builds all applications:
 ```
 make
+```
+
+## Installing Keyboard
+
+Install dependencies:
+```
+sudo pip3 install -r scripts/keyboard/requirements.txt
+```
+
+Edit line 60 of keyboard.py and select your preferred pin layout.
+There are four layouts which each make sure certain pins are left open
+depending upon what other things you'd like to use GPIO for.
+```python
+# Layout 1 leaves SPI0 open
+#       (device pins 19, 21, 23, 24, 26 or GPIO 10, 9, 11, 8, 7)
+# Layout 2 leaves 1-Wire open (Belsamber's original layout)
+#       (device pin 7, or GPIO 4)
+# Layout 3 leaves PCM and 1-Wire open
+#       (device pins 7, 12, 35, 38, 40 or GPIO 4, 18, 19, 20, 21)
+# Layout 4 leaves JTAG Alt5 open
+#       (device pins 7, 29, 31, 32, 33 or GPIO 4, 5, 6, 12, 13)
+
+USE_PINLAYOUT = 1 # default
+```
+
+Then edit /etc/rc.local, adding a call for the keyboard script:
+```
+/path/to/trs80-pi/scripts/keyboard/keyboard.py
 ```
