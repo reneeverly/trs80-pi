@@ -231,7 +231,7 @@ def resolveKeymap():
       + (4, 0) [INDEX_GRAPH in pressed]
    ]
 
-keymaps.extend([None] * 6)
+keymaps.extend([None] * 7)
 
 keymaps[1] = copy.deepcopy(keymaps[0])
 addNumpad(keymaps[1])
