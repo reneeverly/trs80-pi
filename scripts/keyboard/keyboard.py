@@ -228,7 +228,7 @@ def resolveKeymap():
    return keymaps[
       (1, 0) [INDEX_NUMLOCK in pressed]
       + (2, 0) [INDEX_LEFTSHIFT in pressed]
-      + (4, 0) [INDEX_GRAPH in pressed]
+      + (4, 0) [INDEX_GRAPHKEY in pressed]
    ]
 
 keymaps.extend([None] * 7)
@@ -311,7 +311,8 @@ try:
                # the key is still pressed and it's been a half of a second since
 
                # unless capslock or shift, trigger typematic
-               if keycode != INDEX_CAPSLOCK and keycode != INDEX_LEFTSHIFT and keycode != INDEX_NUMLOCK:
+               if keycode != INDEX_CAPSLOCK and keycode != INDEX_LEFTSHIFT
+                     and keycode != INDEX_NUMLOCK and keycode != INDEX_GRAPHKEY:
                   repeated.add(keycode)
                   ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 2)
                
