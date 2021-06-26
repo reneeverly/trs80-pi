@@ -191,7 +191,7 @@ for key in keymap_default:
 keymap_numlock = copy.deepcopy(keymap_default)
 keymap_numlock[NUMCOL * 6 + 2] = [e.KEY_4, SHIFT_NEVER] # U -> 4
 keymap_numlock[NUMCOL * 7 + 2] = [e.KEY_5, SHIFT_NEVER] # I -> 5
-keymap_numlock[3][0] = [e.KEY_6, SHIFT_NEVER] # O -> 6
+keymap_numlock[3] = [e.KEY_6, SHIFT_NEVER] # O -> 6
 keymap_numlock[NUMCOL * 6 + 1] = [e.KEY_1, SHIFT_NEVER] # J -> 1
 keymap_numlock[NUMCOL * 7 + 1] = [e.KEY_2, SHIFT_NEVER] # K -> 2
 keymap_numlock[NUMCOL * 7] = [e.KEY_3, SHIFT_NEVER] # L -> 3
@@ -260,10 +260,10 @@ try:
                pressed.add(keycode)
 
                # check for shift behavior
-               #if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
-               #   ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
-               #elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
-               #   ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
+               if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
+                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
+               elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
+                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
 
                # Turn on the key
                ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 1)
@@ -293,10 +293,10 @@ try:
                repeated.discard(keycode)
 
                # check for shift behavior
-               #if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
-               #   ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
-               #elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
-               #   ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
+               if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
+                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
+               elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
+                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
 
                # If capslock, turn it back on temporarily
                if keycode == INDEX_CAPSLOCK:
