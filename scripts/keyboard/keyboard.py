@@ -324,6 +324,7 @@ except KeyboardInterrupt:
 
 except:
    logging.info("Exiting on unexpected exception")
+   logging.info("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
 
 finally:
    GPIO.cleanup()
