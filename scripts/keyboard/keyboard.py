@@ -233,17 +233,23 @@ try:
             keycode = i * (len(rows) + 1) + j
             newval = GPIO.input(cols[j]) == GPIO.HIGH
             if newval and not keycode in pressed:
+               # The key is being pressed for the first time
                pressed.add(keycode)
 
                # Turn on the key
-               ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
+               ui.write(e.EV_KEY, resolveKeymap()[keycode], 1)
 
                # If capslock, immediately turn it back off
                if keycode == INDEX_CAPSLOCK:
                   ui.write(e.EV_KEY, resolveKeymap()[keycode], 0)
 
                syn = True
+            elif newval and keycode in pressed:
+               # the key is still pressed
+               if keycode != INDEX_CAPSLOCK:
+                  ui.write(e.EV_KEY, resolveKeymap[keycode], 2)
             elif not newval and keycode in pressed:
+               # the key is being released
                pressed.discard(keycode)
                # If capslock, turn it back on temporarily
                if keycode == INDEX_CAPSLOCK:
