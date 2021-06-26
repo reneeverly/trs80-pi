@@ -212,6 +212,8 @@ def addGraph(keymap):
    keymap[NUMCOL * 7 + 6][0] = e.KEY_BACKSLASH # [GRPH][ENTER] to \ and [GRPH][SHIFT][ENTER] to |
    keymap[NUMCOL * 6 + 5][0] = e.KEY_BRIGHTNESSUP # experimental brightness up
    keymap[NUMCOL * 7 + 5][0] = e.KEY_BRIGHTNESSDOWN # experimental brightness down
+   keymap[NUMCOL * 4 + 5][0] = e.KEY_HOME
+   keymap[NUMCOL * 5 + 5][0] = e.KEY_END
    # the "." key on my TRS is broken, so here's a map of [GRPH][,] to .
    keymap[NUMCOL * 5 + 3][0] = e.KEY_DOT
 
