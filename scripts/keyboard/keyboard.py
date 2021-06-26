@@ -226,9 +226,9 @@ def addGraphshift(keymap):
 # Keymap resolver
 def resolveKeymap():
    return keymaps[
-      (1, 0) [INDEX_NUMLOCK in pressed]
-      + (2, 0) [INDEX_LEFTSHIFT in pressed]
-      + (4, 0) [INDEX_GRAPHKEY in pressed]
+      (0, 1) [INDEX_NUMLOCK in pressed]
+      + (0, 2) [INDEX_LEFTSHIFT in pressed]
+      + (0, 4) [INDEX_GRAPHKEY in pressed]
    ]
 
 keymaps.extend([None] * 7)
