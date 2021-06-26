@@ -233,7 +233,7 @@ def resolveKeymap():
 
 keymaps.extend([None] * 6)
 
-keymap[1] = copy.deepcopy(keymaps[0])
+keymaps[1] = copy.deepcopy(keymaps[0])
 addNumpad(keymaps[1])
 
 keymaps[2] = copy.deepcopy(keymaps[0])
