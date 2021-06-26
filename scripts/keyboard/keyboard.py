@@ -247,7 +247,7 @@ try:
             elif newval and keycode in pressed:
                # the key is still pressed
                if keycode != INDEX_CAPSLOCK:
-                  ui.write(e.EV_KEY, resolveKeymap[keycode], 2)
+                  ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
             elif not newval and keycode in pressed:
                # the key is being released
                pressed.discard(keycode)
