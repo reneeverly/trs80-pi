@@ -244,8 +244,8 @@ try:
                   ui.write(e.EV_KEY, resolveKeymap()[keycode], 0)
 
                syn = True
-            elif newval and keycode in pressed and polls_since_press == 30:
-               # the key is still pressed and it's been half a second since
+            elif newval and keycode in pressed and polls_since_press == 15:
+               # the key is still pressed and it's been a fourth of a second since
                if keycode != INDEX_CAPSLOCK:
                   ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
                
