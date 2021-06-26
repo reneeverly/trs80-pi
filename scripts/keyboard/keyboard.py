@@ -236,7 +236,7 @@ try:
                pressed.add(keycode)
 
                # Turn on the key
-               ui.write(e.EV_KEY, resolveKeymap()[keycode], 1)
+               ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
 
                # If capslock, immediately turn it back off
                if keycode == INDEX_CAPSLOCK:
