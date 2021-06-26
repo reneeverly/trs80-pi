@@ -254,7 +254,7 @@ try:
                   ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
                
                   syn = True
-            elif newval and keycode in pressed and keycode in repeated and pools_since_press == 5:
+            elif newval and keycode in pressed and keycode in repeated and polls_since_press == 5:
                # typematic is enabled for this key on 5/60 second delay
                ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
 
