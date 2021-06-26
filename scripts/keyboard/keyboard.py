@@ -39,7 +39,8 @@ ui = UInput(
 )
 
 # set the key repeat
-ui.device.repeat = device.KbdInfo(repeat=3000,delay=3000)
+# this throws an exception for some reason...
+# ui.device.repeat = device.KbdInfo(repeat=3000,delay=3000)
 
 # Set up notation for GPIO
 # Let's use board/device notation rather than GPIO notation.
@@ -247,10 +248,10 @@ try:
                   ui.write(e.EV_KEY, resolveKeymap()[keycode], 0)
 
                syn = True
-            elif newval and keycode in pressed:
-               # the key is still pressed
-               if keycode != INDEX_CAPSLOCK:
-                  ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
+            #elif newval and keycode in pressed:
+            #   # the key is still pressed, so set it to repeat
+            #   if keycode != INDEX_CAPSLOCK:
+            #      ui.write(e.EV_KEY, resolveKeymap()[keycode], 2)
             elif not newval and keycode in pressed:
                # the key is being released
                pressed.discard(keycode)
