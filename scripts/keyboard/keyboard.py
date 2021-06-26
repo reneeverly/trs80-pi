@@ -14,7 +14,7 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
-from evdev import UInput, ecodes as e
+from evdev import UInput, ecodes as e, InputDevice
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -37,6 +37,9 @@ ui = UInput(
    product = PRODUCT_TRS80,
    version = SCRIPTVERSION
 )
+
+# set the key repeat
+ui.device.repeat = evdev.device.KbdInfo(repeat=3000,delay=3000)
 
 # Set up notation for GPIO
 # Let's use board/device notation rather than GPIO notation.
