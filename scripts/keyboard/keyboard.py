@@ -202,7 +202,7 @@ keymap_graph[NUMCOL * 7 + 5] = e.KEY_BRIGHTNESSDOWN # experimental brightness do
 def resolveKeymap():
    if INDEX_NUMLOCK in pressed:
       return keymap_numlock
-   else
+   else:
       return keymap_default
 
 
