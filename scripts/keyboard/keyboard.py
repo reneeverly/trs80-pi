@@ -311,7 +311,7 @@ try:
                # the key is still pressed and it's been a half of a second since
 
                # unless capslock or shift, trigger typematic
-               if keycode != INDEX_CAPSLOCK and keycode != INDEX_LEFTSHIFT
+               if keycode != INDEX_CAPSLOCK and keycode != INDEX_LEFTSHIFT \
                      and keycode != INDEX_NUMLOCK and keycode != INDEX_GRAPHKEY:
                   repeated.add(keycode)
                   ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 2)
