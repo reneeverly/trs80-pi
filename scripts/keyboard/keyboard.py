@@ -185,7 +185,7 @@ SHIFT_NEVER = -1 # Regardless of shift key, key will never be shifted
 
 # Set default keymap shift behavior to default
 for key in keymap_default:
-   key[1] = SHIFT_DEFAULT
+   key.extend([SHIFT_DEFAULT])
 
 # Numlock Keymap
 keymap_numlock = copy.deepcopy(keymap_default)
