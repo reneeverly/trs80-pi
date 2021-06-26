@@ -260,10 +260,10 @@ try:
                pressed.add(keycode)
 
                # check for shift behavior
-               if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
-                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
-               elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
-                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
+               #if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
+               #   ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
+               #elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
+               #   ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
 
                # Turn on the key
                ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 1)
@@ -276,8 +276,8 @@ try:
             elif newval and keycode in pressed and not keycode in repeated and polls_since_press == 30:
                # the key is still pressed and it's been a half of a second since
 
-               # unless capslock, trigger typematic
-               if keycode != INDEX_CAPSLOCK:
+               # unless capslock or shift, trigger typematic
+               if keycode != INDEX_CAPSLOCK and keycode != INDEX_LEFTSHIFT:
                   repeated.add(keycode)
                   ui.write(e.EV_KEY, resolveKeymap()[keycode][0], 2)
                
@@ -293,10 +293,10 @@ try:
                repeated.discard(keycode)
 
                # check for shift behavior
-               if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
-                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
-               elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
-                  ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
+               #if INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_NEVER:
+               #   ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 1)
+               #elif not INDEX_LEFTSHIFT in pressed and resolveKeymap()[keycode][1] == SHIFT_ALWAYS:
+               #   ui.write(e.EV_KEY, e.KEY_LEFTSHIFT, 0)
 
                # If capslock, turn it back on temporarily
                if keycode == INDEX_CAPSLOCK:
@@ -322,9 +322,9 @@ try:
 except KeyboardInterrupt:
    logging.info("Exiting on keyboard interrupt")
 
-except:
-   logging.info("Exiting on unexpected exception")
-   logging.info("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
+#except:
+#   logging.info("Exiting on unexpected exception")
+##   logging.info("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
 
 finally:
    GPIO.cleanup()
