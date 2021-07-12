@@ -39,3 +39,14 @@ Then edit /etc/rc.local, adding a call for the keyboard script:
 ```
 /path/to/trs80-pi/scripts/keyboard/keyboard.py
 ```
+
+## Miscellaneous Quality of Life Changes
+
+Depending on the size of your display, it might be worth it to adjust the font size of the linux framebuffer:
+```
+sudo dpkg-reconfigure console-setup
+```
+
+I used an 8.8" display (1920x480) which Raspberry Pi OS had difficulty interfacing with.  To resolve that, I used the timings provided by innovodesign.
+* https://gist.github.com/innovodesign/3f5775d19cb890c0aa59fbb96757bf4b
+The lcd rotation solution didn't work; I suspect dropping `echo 1 | sudo tee /sys/class/graphics/fbcon/rotate_all` into the rc.local file should be a stopgap (from https://fadsihave.wordpress.com/2020/11/30/armbian-setup-notes/).
