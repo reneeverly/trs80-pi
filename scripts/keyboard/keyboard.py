@@ -16,7 +16,7 @@ import RPi.GPIO as GPIO
 from time import sleep
 from evdev import UInput, ecodes as e
 import logging
-import copy
+import copy, signal
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -302,6 +302,8 @@ for col in cols:
 
 
 # Polling loop
+
+s = signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 try:
 
