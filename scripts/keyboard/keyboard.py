@@ -66,7 +66,7 @@ USE_PINLAYOUT = 1
 
 # If you're in that sort of situation, inverting the pin layout might help.
 # Should be True by default, but my Pi is in backwards so rip.
-STANDARD_ORIENTATION = False
+STANDARD_ORIENTATION = True
 
 if USE_PINLAYOUT == 1:
    # Prioritize SPI0 
