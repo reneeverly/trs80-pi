@@ -60,26 +60,53 @@ GPIO.setmode(GPIO.BOARD)
 
 USE_PINLAYOUT = 1
 
+# Depending on how the Pi GPIO port is oriented, you might end up with a
+# situation where every single jumper wire crosses over another one.  This makes
+# tracing contacts and keeping things in the correct order rather difficult.
+
+# If you're in that sort of situation, inverting the pin layout might help.
+# Should be True by default, but my Pi is in backwards so rip.
+STANDARD_ORIENTATION = True
+
 if USE_PINLAYOUT == 1:
-   # Prioritize SPI0
-
-   # Pin configuration (Keyboard pin -> GPIO pin)
-   # black wires     white wires
-   # KB   GPIO       KB    GPIO
-   #  1 -> 7         11 -> 0
-   #  2    11        12    31
-   #  3    12        13    32
-   #  4    13        14    33
-   #  5    15        15    35
-   #  6    16        16    36
-   #  7    18        17    37
-   #  8    22        18    38
-   #  9    29        19    40
-   # 10 -> 0         20 -> 0
-
+   # Prioritize SPI0 
    # Leave open: 19, 21, 23, 24, 26
-   cols = [ 7, 11, 12, 13, 15, 16, 18, 22, 29]
-   rows = [31, 32, 33, 35, 36, 37, 38, 40]
+
+   if STANDARD_ORIENTATION:
+      # Pin configuration (Keyboard pin -> GPIO pin)
+      # black wires     white wires
+      # KB   GPIO       KB    GPIO
+      #  1 -> 7         11 -> 0
+      #  2    11        12    31
+      #  3    12        13    32
+      #  4    13        14    33
+      #  5    15        15    35
+      #  6    16        16    36
+      #  7    18        17    37
+      #  8    22        18    38
+      #  9    29        19    40
+      # 10 -> 0         20 -> 0
+
+      cols = [ 7, 11, 12, 13, 15, 16, 18, 22, 29]
+      rows = [31, 32, 33, 35, 36, 37, 38, 40]
+
+   else: # Reverse pinlayout
+      # Pin configuration (Keyboard pin -> GPIO pin)
+      # black wires     white wires
+      # KB   GPIO       KB    GPIO
+      #  1 -> 40         11 -> 0
+      #  2    38        12    22
+      #  3    37        13    18
+      #  4    36        14    16
+      #  5    35        15    15
+      #  6    33        16    13
+      #  7    32        17    12
+      #  8    31        18    11
+      #  9    29        19    7
+      # 10 -> 0         20 -> 0
+
+      cols = [40, 38, 37, 36, 35, 33, 32, 31, 29]
+      rows = [22, 18, 16, 15, 13, 12, 11,  7]
 
 elif USE_PINLAYOUT == 2:
    # Prioritize 1-Wire (Belsamber's original configuration)
@@ -276,14 +303,14 @@ for col in cols:
 
 # Polling loop
 
-try:
+pressed = set()
+repeated = set()
+sleep_time = 1/60
+polls_since_press = 0
 
-   pressed = set()
-   repeated = set()
-   sleep_time = 1/60
-   polls_since_press = 0
-   
-   while True:
+while True:
+
+   try:
       sleep(sleep_time)
       syn = False
       for i in range(len(rows)):
@@ -356,12 +383,7 @@ try:
       elif polls_since_press == 1200: # 120 seconds after 10 seconds
          sleep_time = 1/5
 
-except KeyboardInterrupt:
-   logging.info("Exiting on keyboard interrupt")
+   except KeyboardInterrupt:
+      continue
 
-#except:
-#   logging.info("Exiting on unexpected exception")
-##   logging.info("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
-
-finally:
-   GPIO.cleanup()
+GPIO.cleanup()

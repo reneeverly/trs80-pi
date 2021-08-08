@@ -19,7 +19,7 @@ Install dependencies:
 sudo pip3 install -r scripts/keyboard/requirements.txt
 ```
 
-Edit line 60 of keyboard.py and select your preferred pin layout.
+Edit line 61 of keyboard.py and select your preferred pin layout.
 There are four layouts which each make sure certain pins are left open
 depending upon what other things you'd like to use GPIO for.
 ```python
@@ -34,6 +34,8 @@ depending upon what other things you'd like to use GPIO for.
 
 USE_PINLAYOUT = 1 # default
 ```
+Pay very close attention to `STANDARD_ORIENTATION` on line 69.  This should be set to True unless you are using an inverted pin layout.
+
 
 Then edit /etc/rc.local, adding a call for the keyboard script:
 ```
