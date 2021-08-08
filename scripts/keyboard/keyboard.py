@@ -16,7 +16,7 @@ import RPi.GPIO as GPIO
 from time import sleep
 from evdev import UInput, ecodes as e
 import logging
-import copy, signal
+import copy
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -303,16 +303,14 @@ for col in cols:
 
 # Polling loop
 
-s = signal.signal(signal.SIGINT, signal.SIG_IGN)
+pressed = set()
+repeated = set()
+sleep_time = 1/60
+polls_since_press = 0
 
-try:
+while True:
 
-   pressed = set()
-   repeated = set()
-   sleep_time = 1/60
-   polls_since_press = 0
-   
-   while True:
+   try:
       sleep(sleep_time)
       syn = False
       for i in range(len(rows)):
@@ -385,12 +383,7 @@ try:
       elif polls_since_press == 1200: # 120 seconds after 10 seconds
          sleep_time = 1/5
 
-except KeyboardInterrupt:
-   logging.info("Exiting on keyboard interrupt")
+   except KeyboardInterrupt:
+      continue
 
-#except:
-#   logging.info("Exiting on unexpected exception")
-##   logging.info("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
-
-finally:
-   GPIO.cleanup()
+GPIO.cleanup()
